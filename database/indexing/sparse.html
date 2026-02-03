@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate DB Engine: Sparse vs Dense</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --accent: #58a6ff;
+            --dense-color: #d2a8ff; --sparse-color: #79c0ff;
+            --success: #3fb950; --danger: #f85149; --text: #c9d1d9; --border: #30363d;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 15px 30px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: flex; gap: 10px; }
+        input { background: #0d1117; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; width: 60px; text-align: center; }
+        button { background: var(--border); color: var(--text); border: 1px solid var(--border); padding: 8px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; }
+        button:hover { border-color: var(--accent); }
+        
+        main { display: grid; grid-template-columns: 220px 220px 1fr; gap: 1px; flex-grow: 1; background: var(--border); }
+        .col { background: var(--bg); padding: 20px; overflow-y: auto; }
+        h3 { font-size: 0.9em; letter-spacing: 1px; margin-bottom: 20px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .card { background: var(--panel); border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 0.85em; transition: 0.3s; position: relative; }
+        .sparse-card { border-left: 3px solid var(--sparse-color); }
+        .dense-card { border-left: 3px solid var(--dense-color); }
+        
+        .page-node { border: 1px solid var(--border); margin-bottom: 20px; border-radius: 8px; background: #0d1117; overflow: hidden; }
+        .page-header { background: var(--border); padding: 5px 12px; font-size: 0.75em; color: #8b949e; display: flex; justify-content: space-between; }
+        .record { padding: 10px 15px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between; font-size: 0.9em; }
+        .record:last-child { border-bottom: none; }
+
+        /* Status effects */
+        .scanning { border-color: var(--accent) !important; box-shadow: 0 0 10px rgba(88, 166, 255, 0.3); transform: scale(1.02); }
+        .match { background: var(--success) !important; color: white !important; }
+        .splitting { animation: flash 0.4s infinite alternate; }
+        @keyframes flash { from { border-color: var(--danger); } to { border-color: transparent; } }
+        
+        footer { background: #010409; height: 80px; padding: 15px 30px; font-family: monospace; font-size: 0.85em; color: #8b949e; border-top: 1px solid var(--border); overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div><span style="color:var(--accent)">DB_CORE</span> v2.0</div>
+    <div class="controls">
+        <input type="number" id="keyVal" value="45">
+        <button onclick="action('search')">SEARCH</button>
+        <button onclick="action('insert')" style="color:var(--success)">INSERT</button>
+        <button onclick="action('delete')" style="color:var(--danger)">DELETE</button>
+    </div>
+</header>
+
+<main>
+    <div class="col">
+        <h3>DENSE INDEX</h3>
+        <div id="denseIdx"></div>
+    </div>
+    <div class="col" style="background: #0d1117;">
+        <h3>SPARSE INDEX</h3>
+        <div id="sparseIdx"></div>
+    </div>
+    <div class="col">
+        <h3>PHYSICAL PAGES (DISK)</h3>
+        <div id="disk"></div>
+    </div>
+</main>
+
+<footer id="logs"> > System ready. Sparse index tracks pages. Dense index tracks every record. </footer>
+
+<script>
+    let pages = [[10, 20, 30], [40, 50, 60]];
+    const LIMIT = 3;
+
+    function log(m) { const l = document.getElementById('logs'); l.innerHTML = `> ${m}<br>` + l.innerHTML; }
+
+    function render() {
+        const dIdx = document.getElementById('denseIdx');
+        const sIdx = document.getElementById('sparseIdx');
+        const disk = document.getElementById('disk');
+        dIdx.innerHTML = ''; sIdx.innerHTML = ''; disk.innerHTML = '';
+
+        pages.forEach((page, pIdx) => {
+            // Sparse Index entry (only 1 per page)
+            sIdx.innerHTML += `<div class="card sparse-card" id="s-ptr-${pIdx}">Key: ${page[0]} <br> <small>PTR: PAGE_${pIdx}</small></div>`;
+
+            // Physical Page
+            let phtml = `<div class="page-node" id="p-${pIdx}"><div class="page-header"><span>PAGE_${pIdx}</span><span>${page.length}/${LIMIT}</span></div>`;
+            page.forEach(rec => {
+                phtml += `<div class="record" id="r-${rec}">ID: ${rec} <span>DATA_PTR</span></div>`;
+                // Dense Index entry (1 per record)
+                dIdx.innerHTML += `<div class="card dense-card" id="d-ptr-${rec}">Key: ${rec} <br> <small>PTR: REC_${rec}</small></div>`;
+            });
+            disk.innerHTML += phtml + `</div>`;
+        });
+    }
+
+    async function action(type) {
+        const val = parseInt(document.getElementById('keyVal').value);
+        if (type === 'search') {
+            log(`Searching for ${val}...`);
+            let pIdx = 0;
+            for(let i=0; i<pages.length; i++) if(val >= pages[i][0]) pIdx = i;
+            
+            document.getElementById(`s-ptr-${pIdx}`).classList.add('scanning');
+            await new Promise(r => setTimeout(r, 600));
+            document.getElementById(`p-${pIdx}`).classList.add('scanning');
+            
+            let found = false;
+            for(let r of pages[pIdx]) {
+                const el = document.getElementById(`r-${r}`);
+                el.classList.add('scanning');
+                await new Promise(r=>setTimeout(r, 300));
+                if(r === val) { el.classList.add('match'); found = true; break; }
+                el.classList.remove('scanning');
+            }
+            log(found ? `Success! Found ${val}` : `Key ${val} not in page.`);
+        } 
+        
+        if (type === 'insert') {
+            let pIdx = 0;
+            for(let i=0; i<pages.length; i++) if(val >= pages[i][0]) pIdx = i;
+            pages[pIdx].push(val);
+            pages[pIdx].sort((a,b)=>a-b);
+            log(`Inserted ${val} into Page ${pIdx}`);
+            
+            if(pages[pIdx].length > LIMIT) {
+                log(`Page ${pIdx} overflow! Splitting...`);
+                const mid = Math.ceil(pages[pIdx].length/2);
+                const move = pages[pIdx].splice(mid);
+                pages.splice(pIdx+1, 0, move);
+            }
+            render();
+        }
+
+        if (type === 'delete') {
+            pages = pages.map(p => p.filter(r => r !== val)).filter(p => p.length > 0);
+            log(`Deleted ${val} and updated indices.`);
+            render();
+        }
+    }
+    render();
+</script>
+</body>
+</html>
