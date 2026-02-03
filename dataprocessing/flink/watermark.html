@@ -139,8 +139,8 @@
 <body>
 
     <header style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: var(--flink); margin: 0;">FLINK EVENT TIME GATE</h1>
-        <p style="color: #666;">Watermark moves forward. Events arriving behind the gate are dropped.</p>
+        <h1 style="color: var(--flink); margin: 0;">FLINK EVENT WATER MARK</h1>
+        <p style="color: #666;">Watermark moves forward. Events arriving behind the watermark are dropped.</p>
     </header>
 
     <div class="dashboard">
@@ -150,12 +150,12 @@
                 <input type="number" id="eventTime" value="10">
                 <button class="btn-ingest" onclick="ingest()">INGEST EVENT</button>
                 <div style="flex-grow:1"></div>
-                <button class="btn-wm" onclick="advanceWM()">ADVANCE GATE (+10)</button>
+                <button class="btn-wm" onclick="advanceWM()">ADVANCE WATERMARK (+10)</button>
             </div>
 
             <div class="track-container" id="track">
                 <div class="gate" id="gate" style="left: 50px;">
-                    <div class="gate-label">WATERMARK GATE</div>
+                    <div class="gate-label">WATERMARK</div>
                 </div>
             </div>
 
