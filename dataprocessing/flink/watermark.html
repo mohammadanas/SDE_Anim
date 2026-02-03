@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flink: The Watermark Gate</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #111111;
+            --flink: #ff4c00;
+            --watermark: #00d4ff;
+            --success: #00ff9d;
+            --danger: #ff0055;
+            --text: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0; padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Control UI */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        input {
+            background: #000;
+            border: 1px solid var(--watermark);
+            color: var(--watermark);
+            padding: 10px;
+            border-radius: 6px;
+            width: 80px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-ingest { background: var(--flink); color: white; }
+        .btn-wm { background: var(--watermark); color: #000; }
+
+        /* The Stream Track */
+        .track-container {
+            position: relative;
+            background: #0a0a0a;
+            height: 150px;
+            border: 1px solid #222;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .gate {
+            position: absolute;
+            height: 100%;
+            width: 4px;
+            background: var(--watermark);
+            box-shadow: 0 0 30px var(--watermark), 0 0 10px var(--watermark);
+            z-index: 10;
+            transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gate-label {
+            position: absolute;
+            top: -30px;
+            left: -50px;
+            color: var(--watermark);
+            font-size: 0.7em;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        .event {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #1a1a1a;
+            border: 2px solid var(--flink);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            top: 50px;
+            transition: all 1s ease;
+        }
+
+        /* Sidebar & Table */
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .card {
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th { text-align: left; color: #666; padding-bottom: 10px; }
+        td { padding: 8px 0; border-bottom: 1px solid #222; }
+
+        .status-processed { color: var(--success); }
+        .status-dropped { color: var(--danger); text-decoration: line-through; }
+        
+        .side-output-log {
+            color: var(--danger);
+            font-family: monospace;
+            font-size: 0.8em;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: var(--flink); margin: 0;">FLINK EVENT TIME GATE</h1>
+        <p style="color: #666;">Watermark moves forward. Events arriving behind the gate are dropped.</p>
+    </header>
+
+    <div class="dashboard">
+        <div class="main-flow">
+            <div class="controls">
+                <span>Event Time (T):</span>
+                <input type="number" id="eventTime" value="10">
+                <button class="btn-ingest" onclick="ingest()">INGEST EVENT</button>
+                <div style="flex-grow:1"></div>
+                <button class="btn-wm" onclick="advanceWM()">ADVANCE GATE (+10)</button>
+            </div>
+
+            <div class="track-container" id="track">
+                <div class="gate" id="gate" style="left: 50px;">
+                    <div class="gate-label">WATERMARK GATE</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Logical State Table (Re-ordered)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Event Time</th><th>Arrival Order</th><th>Final Status</th></tr>
+                    </thead>
+                    <tbody id="stateTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="card" style="border-color: var(--danger);">
+                <h3 style="color: var(--danger); margin-top: 0;">SIDE OUTPUT</h3>
+                <p style="font-size: 0.7em; color: #888;">Events that arrived too late for the Window.</p>
+                <div id="sideLog" class="side-output-log"></div>
+            </div>
+            
+            <div class="card">
+                <h3>Engine Logic</h3>
+                <ul style="font-size: 0.8em; line-height: 1.6; color: #aaa;">
+                    <li><b>Buffer:</b> Events > Watermark stay in memory.</li>
+                    <li><b>Sorted:</b> Items are processed in T-order once Gate passes.</li>
+                    <li><b>Dropped:</b> If T < Watermark, event is routed to Side Output.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentWM = 0;
+        let eventHistory = [];
+        let arrivalCounter = 1;
+
+        function ingest() {
+            const t = parseInt(document.getElementById('eventTime').value);
+            const isLate = t < currentWM;
+            
+            // 1. Visual Animation
+            const ev = document.createElement('div');
+            ev.className = 'event';
+            ev.innerText = `T${t}`;
+            ev.style.left = '100%';
+            document.getElementById('track').appendChild(ev);
+
+            // Move to position based on T
+            setTimeout(() => {
+                const targetPos = (t * 10) + 50;
+                ev.style.left = targetPos + 'px';
+                if(isLate) {
+                    ev.style.borderColor = 'var(--danger)';
+                    ev.style.top = '100px';
+                    ev.style.opacity = '0.5';
+                }
+            }, 100);
+
+            // 2. Logic Update
+            if (isLate) {
+                const log = document.getElementById('sideLog');
+                log.innerHTML = `<div>[ERR] Event T=${t} rejected. Arrived at WM=${currentWM}</div>` + log.innerHTML;
+            }
+
+            eventHistory.push({
+                t: t,
+                arrival: arrivalCounter++,
+                status: isLate ? 'Dropped' : (t <= currentWM ? 'Processed' : 'Buffered')
+            });
+
+            updateUI();
+        }
+
+        function advanceWM() {
+            currentWM += 10;
+            const gate = document.getElementById('gate');
+            gate.style.left = (currentWM * 10 + 50) + 'px';
+            
+            // Update status of buffered events
+            eventHistory.forEach(e => {
+                if (e.status === 'Buffered' && e.t <= currentWM) {
+                    e.status = 'Processed';
+                }
+            });
+
+            updateUI();
+        }
+
+        function updateUI() {
+            const tbody = document.getElementById('stateTable');
+            // Show events sorted by T
+            const sorted = [...eventHistory].sort((a,b) => a.t - b.t);
+            
+            tbody.innerHTML = sorted.map(e => `
+                <tr>
+                    <td>T = ${e.t}</td>
+                    <td>#${e.arrival}</td>
+                    <td class="${e.status === 'Dropped' ? 'status-dropped' : (e.status === 'Processed' ? 'status-processed' : '')}">
+                        ${e.status.toUpperCase()}
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
