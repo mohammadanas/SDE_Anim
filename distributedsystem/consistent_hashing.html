@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Hash Ring | Stable Trace Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'JetBrains Mono', monospace; background: #0c0c0e; color: #cbd5e1; height: 100vh; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        #ring-svg { transform: rotate(-90deg); filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
+        .node-marker { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .request-particle { fill: #f8fafc; filter: drop-shadow(0 0 8px #fff); }
+        .replica-pulse { fill: none; stroke-width: 2; animation: ripple 0.8s ease-out forwards; }
+        @keyframes ripple { from { r: 5; opacity: 1; } to { r: 40; opacity: 0; } }
+        .range-path { fill: none; stroke-width: 12; opacity: 0.2; transition: all 0.5s; cursor: pointer; }
+        
+        /* Fixed Scroll Area */
+        #event-log { 
+            height: 100%; 
+            overflow-y: auto; 
+            scrollbar-width: thin; 
+            scrollbar-color: #334155 transparent; 
+        }
+        #event-log::-webkit-scrollbar { width: 4px; }
+        #event-log::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-[1600px] mx-auto grid grid-cols-12 gap-8 h-[90vh]">
+        
+        <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+            <div class="glass p-6 rounded-3xl border-l-4 border-sky-500 shrink-0">
+                <h2 class="text-xl font-bold text-white mb-1 tracking-tight">RING_MANAGER_V4</h2>
+                <p class="text-[10px] text-slate-500 mb-6 uppercase tracking-widest font-bold">Optimized Memory & Layout</p>
+                
+                <div class="space-y-3">
+                    <button onclick="addNode()" class="w-full py-3 bg-sky-600/10 hover:bg-sky-600/20 border border-sky-500/30 rounded-xl text-xs font-bold transition flex justify-between px-4">
+                        <span>SCALE UP</span><span>+NODE</span>
+                    </button>
+                    <button onclick="failNode()" class="w-full py-3 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/30 rounded-xl text-xs font-bold transition flex justify-between px-4">
+                        <span>CHAOS MONKEY</span><span>KILL_NODE</span>
+                    </button>
+                    <hr class="border-white/5 my-4">
+                    <label class="text-[10px] text-slate-400 flex justify-between"><span>TRAFFIC_INTENSITY</span><span id="traffic-val">15%</span></label>
+                    <input type="range" id="traffic" min="0" max="100" value="15" oninput="document.getElementById('traffic-val').innerText=this.value+'%'" class="w-full accent-sky-500 bg-slate-800 h-1 rounded-full appearance-none">
+                </div>
+            </div>
+
+            <div class="glass flex-grow rounded-3xl p-6 overflow-hidden flex flex-col">
+                <h3 class="text-[10px] text-slate-500 mb-4 font-bold tracking-widest uppercase flex justify-between">
+                    <span>Active Ranges</span>
+                    <span id="node-count" class="text-sky-400">0 NODES</span>
+                </h3>
+                <div id="registry" class="space-y-2 overflow-y-auto pr-2 scrollbar-hide"></div>
+            </div>
+        </div>
+
+        <div class="col-span-6 relative flex items-center justify-center overflow-hidden">
+            <svg id="ring-svg" width="600" height="600" viewBox="0 0 600 600">
+                <circle cx="300" cy="300" r="240" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="24" />
+                <g id="ranges"></g>
+                <g id="nodes"></g>
+                <g id="requests"></g>
+            </svg>
+            <div class="absolute text-center pointer-events-none">
+                <p id="system-status" class="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">RING_STABLE</p>
+            </div>
+        </div>
+
+        <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+            <div class="glass p-6 rounded-3xl shrink-0">
+                <h3 class="text-[10px] text-slate-500 mb-4 font-bold tracking-widest uppercase">Quorum Health (N=3)</h3>
+                <div id="durability-meter" class="text-3xl font-bold text-sky-400">100%</div>
+                <div class="w-full h-1 bg-slate-800 mt-4 rounded-full overflow-hidden">
+                    <div id="durability-bar" class="h-full bg-sky-500 transition-all duration-1000" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="glass flex-grow rounded-3xl p-6 overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Real-Time Execution Trace</h3>
+                </div>
+                <div id="log-container" class="flex-grow overflow-hidden">
+                    <div id="event-log" class="text-[10px] space-y-2 font-mono pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let nodes = [];
+        const REPLICATION_FACTOR = 3;
+        const RADIUS = 240;
+        const CENTER = 300;
+        const MAX_LOG_ENTRIES = 30;
+
+        function addNode() {
+            const id = 'SVR-' + Math.floor(Math.random() * 900 + 100);
+            const angle = Math.random() * 360;
+            const color = `hsl(${Math.random() * 360}, 75%, 60%)`;
+            nodes.push({ id, angle, color, status: 'ALIVE' });
+            nodes.sort((a, b) => a.angle - b.angle);
+            
+            logTrace(`TOPOLOGY`, `Node <b>${id}</b> joined @ ${angle.toFixed(1)}°`, 'sky');
+            render();
+        }
+
+        function failNode() {
+            const alive = nodes.filter(n => n.status === 'ALIVE');
+            if (alive.length === 0) return;
+            const target = alive[Math.floor(Math.random() * alive.length)];
+            target.status = 'FAILED';
+            
+            const idx = nodes.indexOf(target);
+            const nextNode = nodes[(idx + 1) % nodes.length];
+            
+            logTrace(`FAILURE`, `<b>${target.id}</b> dropped. Range re-mapped to <b>${nextNode.id}</b>`, 'rose');
+            render();
+        }
+
+        function logTrace(type, msg, color) {
+            const log = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            const borderColors = { sky: 'border-sky-500', rose: 'border-rose-500', amber: 'border-amber-500', emerald: 'border-emerald-500' };
+            const textColors = { sky: 'text-sky-400', rose: 'text-rose-400', amber: 'text-amber-400', emerald: 'text-emerald-400' };
+            
+            entry.className = `border-l-2 ${borderColors[color] || 'border-slate-700'} bg-white/5 p-2 rounded-r-md animate-in slide-in-from-right-2 duration-200 shrink-0`;
+            entry.innerHTML = `<div class="flex justify-between font-bold mb-1"><span class="${textColors[color] || 'text-slate-400'} uppercase text-[8px]">${type}</span><span class="text-slate-600 text-[8px]">${new Date().toLocaleTimeString()}</span></div>
+                               <div class="text-slate-300 leading-relaxed">${msg}</div>`;
+            
+            log.prepend(entry);
+
+            // Housekeeping: remove oldest entries
+            while (log.children.length > MAX_LOG_ENTRIES) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function polarToCartesian(angleInDegrees, radius) {
+            const radians = (angleInDegrees * Math.PI) / 180.0;
+            return { x: CENTER + radius * Math.cos(radians), y: CENTER + radius * Math.sin(radians) };
+        }
+
+        function describeArc(startAngle, endAngle) {
+            const start = polarToCartesian(endAngle, RADIUS);
+            const end = polarToCartesian(startAngle, RADIUS);
+            const largeArcFlag = (endAngle - startAngle + 360) % 360 <= 180 ? "0" : "1";
+            return ["M", start.x, start.y, "A", RADIUS, RADIUS, 0, largeArcFlag, 0, end.x, end.y].join(" ");
+        }
+
+        function render() {
+            const alive = nodes.filter(n => n.status === 'ALIVE');
+            const rangesG = document.getElementById('ranges');
+            const nodesG = document.getElementById('nodes');
+            const registry = document.getElementById('registry');
+            
+            rangesG.innerHTML = '';
+            nodesG.innerHTML = '';
+            registry.innerHTML = '';
+            document.getElementById('node-count').innerText = `${alive.length} NODES`;
+
+            alive.forEach((node, i) => {
+                const prevNode = alive[i === 0 ? alive.length - 1 : i - 1];
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", describeArc(prevNode.angle, node.angle < prevNode.angle ? node.angle + 360 : node.angle));
+                path.setAttribute("class", "range-path");
+                path.setAttribute("stroke", node.color);
+                rangesG.appendChild(path);
+
+                const pos = polarToCartesian(node.angle, RADIUS);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", pos.x); circle.setAttribute("cy", pos.y); circle.setAttribute("r", "12");
+                circle.setAttribute("fill", node.color); circle.setAttribute("stroke", "#fff"); circle.setAttribute("stroke-width", "3");
+                circle.setAttribute("class", "node-marker");
+                nodesG.appendChild(circle);
+
+                const row = document.createElement('div');
+                row.className = "p-2 rounded-lg bg-white/5 border border-white/5";
+                row.innerHTML = `<div class="text-[10px] font-bold" style="color:${node.color}">${node.id}</div>
+                                 <div class="text-[8px] text-slate-500">Ownership: ${prevNode.angle.toFixed(0)}° → ${node.angle.toFixed(0)}°</div>`;
+                registry.appendChild(row);
+            });
+
+            const durability = Math.min((alive.length / 3) * 100, 100);
+            document.getElementById('durability-meter').innerText = durability.toFixed(0) + '%';
+            document.getElementById('durability-bar').style.width = durability + '%';
+        }
+
+        function simulateRequest() {
+            const traffic = document.getElementById('traffic').value;
+            if (Math.random() * 100 > traffic) return;
+            const alive = nodes.filter(n => n.status === 'ALIVE');
+            if (alive.length < 1) return;
+
+            const hashVal = Math.floor(Math.random() * 360);
+            let targetIdx = alive.findIndex(n => n.angle >= hashVal);
+            if (targetIdx === -1) targetIdx = 0;
+            const coordinator = alive[targetIdx];
+
+            logTrace(`INGRESS`, `Key <b>0x${hashVal.toString(16).toUpperCase()}</b> → Coord: <b>${coordinator.id}</b>`, 'emerald');
+
+            const particle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            particle.setAttribute("r", "5"); particle.setAttribute("class", "request-particle");
+            document.getElementById('requests').appendChild(particle);
+
+            const targetAngle = coordinator.angle < hashVal ? coordinator.angle + 360 : coordinator.angle;
+            const startTime = performance.now();
+            function animate(time) {
+                const progress = Math.min((time - startTime) / 500, 1);
+                const angle = hashVal + (targetAngle - hashVal) * progress;
+                const p = polarToCartesian(angle, RADIUS);
+                particle.setAttribute("cx", p.x); particle.setAttribute("cy", p.y);
+                if (progress < 1) requestAnimationFrame(animate);
+                else { particle.remove(); replicate(coordinator, alive, targetIdx); }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function replicate(coord, alive, idx) {
+            createPulse(coord.angle, coord.color);
+            let chain = [];
+            for(let i=1; i < REPLICATION_FACTOR; i++) {
+                const replica = alive[(idx + i) % alive.length];
+                if(replica) {
+                    chain.push(replica.id);
+                    setTimeout(() => createPulse(replica.angle, replica.color, 12), i * 150);
+                }
+            }
+            if(chain.length > 0) logTrace(`REPLICATE`, `${coord.id} ➔ [${chain.join(', ')}]`, 'amber');
+        }
+
+        function createPulse(angle, color, inset=0) {
+            const pos = polarToCartesian(angle, RADIUS - inset);
+            const ripple = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            ripple.setAttribute("cx", pos.x); ripple.setAttribute("cy", pos.y);
+            ripple.setAttribute("stroke", color); ripple.setAttribute("class", "replica-pulse");
+            document.getElementById('requests').appendChild(ripple);
+            setTimeout(() => ripple.remove(), 800);
+        }
+
+        setInterval(simulateRequest, 200);
+        for(let i=0; i<4; i++) addNode();
+    </script>
+</body>
+</html>
