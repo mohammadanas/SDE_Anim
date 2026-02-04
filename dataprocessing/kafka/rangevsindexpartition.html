@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDE Deep Dive: Range vs Indexed Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #020617; color: #e2e8f0; }
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+        .log-lane { background: #0f172a; border-left: 4px solid #334155; height: 60px; position: relative; overflow: hidden; margin-bottom: 8px; transition: all 0.3s; }
+        .data-bit { width: 8px; height: 8px; border-radius: 1px; position: absolute; animation: stream 2s linear forwards; }
+        @keyframes stream {
+            0% { left: -10px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        .barrier { background: rgba(239, 68, 68, 0.2) !important; border-left-color: #ef4444 !important; }
+        .buffer-cell { width: 10px; height: 10px; background: #475569; border-radius: 1px; }
+        .buffer-cell.active { background: #f43f5e; box-shadow: 0 0 5px #f43f5e; }
+        .new-lane { border-left-color: #10b981 !important; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: scaleY(0); } to { opacity: 1; transform: scaleY(1); } }
+    </style>
+</head>
+<body class="p-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-10 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Architectural Scaling: Range vs Index</h1>
+                <p class="text-slate-400 mono text-sm">Observe Localized vs Global Synchronization Barriers</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-12">
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-red-400 uppercase">Indexed (Mod-N)</h2>
+                    <div id="idx-status" class="text-[10px] px-2 py-1 rounded border border-red-500/50 text-red-400">NOMINAL</div>
+                </div>
+                <div class="mb-4">
+                    <div class="text-[10px] text-slate-500 mb-1">PRODUCER BACKPRESSURE</div>
+                    <div id="idx-buffer" class="flex flex-wrap gap-1 h-10 p-2 bg-black/40 rounded"></div>
+                </div>
+                <div id="idx-logs" class="max-h-[400px] overflow-y-auto pr-2">
+                    <div class="log-lane" id="idx-l0"><span class="absolute top-1 left-2 text-[10px] mono text-slate-500">PARTITION_0</span></div>
+                    <div class="log-lane" id="idx-l1"><span class="absolute top-1 left-2 text-[10px] mono text-slate-500">PARTITION_1</span></div>
+                </div>
+                <button onclick="expandIndexed()" id="idx-btn" class="mt-6 w-full bg-red-600 hover:bg-red-500 py-3 rounded font-bold text-xs uppercase tracking-widest">Add Partition (Global Sync)</button>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-emerald-400 uppercase">Range-Based</h2>
+                    <div id="rng-status" class="text-[10px] px-2 py-1 rounded border border-emerald-500/50 text-emerald-400">NOMINAL</div>
+                </div>
+                <div class="mb-4">
+                    <div class="text-[10px] text-slate-500 mb-1">LOCAL RANGE BACKPRESSURE</div>
+                    <div id="rng-buffer" class="flex flex-wrap gap-1 h-10 p-2 bg-black/40 rounded"></div>
+                </div>
+                <div id="rng-logs" class="max-h-[400px] overflow-y-auto pr-2">
+                    <div class="log-lane" id="rng-l0"><span class="absolute top-1 left-2 text-[10px] mono text-slate-500">RANGE [000-100]</span></div>
+                    <div class="log-lane" id="rng-l1"><span class="absolute top-1 left-2 text-[10px] mono text-slate-500">RANGE [101-200]</span></div>
+                </div>
+                <button onclick="splitRange()" id="rng-btn" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded font-bold text-xs uppercase tracking-widest">Split Last Range (Local Sync)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let idxState = 'NOMINAL';
+        let rngState = 'NOMINAL';
+        let idxCount = 2;
+        let rngRanges = [{ s: 0, e: 100, id: 'rng-l0' }, { s: 101, e: 200, id: 'rng-l1' }];
+        let idxBuf = 0; let rngBuf = 0;
+
+        function spawn(id, color) {
+            const el = document.getElementById(id); if (!el) return;
+            const bit = document.createElement('div');
+            bit.className = 'data-bit'; bit.style.backgroundColor = color;
+            bit.style.top = Math.random() * 40 + 10 + 'px';
+            el.appendChild(bit); setTimeout(() => bit.remove(), 2000);
+        }
+
+        setInterval(() => {
+            if (idxState === 'NOMINAL') {
+                spawn(`idx-l${Math.floor(Math.random() * idxCount)}`, '#60a5fa');
+                if (idxBuf > 0) idxBuf--;
+            } else { idxBuf = Math.min(idxBuf + 1, 50); }
+            
+            // Lane 0 is always flowing (demonstrates isolation)
+            spawn('rng-l0', '#10b981');
+            
+            if (rngState === 'NOMINAL') {
+                // Ingest into all ranges including new ones
+                const target = rngRanges[Math.floor(Math.random() * (rngRanges.length - 1)) + 1].id;
+                spawn(target, '#10b981');
+                if (rngBuf > 0) rngBuf--;
+            } else { rngBuf = Math.min(rngBuf + 1, 30); }
+
+            updateBuf('idx-buffer', idxBuf); updateBuf('rng-buffer', rngBuf);
+        }, 150);
+
+        function updateBuf(id, count) {
+            const b = document.getElementById(id); b.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                const c = document.createElement('div'); c.className = 'buffer-cell active';
+                b.appendChild(c);
+            }
+        }
+
+        function expandIndexed() {
+            idxState = 'SYNC'; 
+            document.getElementById('idx-status').innerText = "GLOBAL BARRIER";
+            document.querySelectorAll('#idx-logs .log-lane').forEach(l => l.classList.add('barrier'));
+            document.getElementById('idx-btn').disabled = true;
+            setTimeout(() => {
+                const div = document.createElement('div');
+                div.className = 'log-lane new-lane'; div.id = `idx-l${idxCount}`;
+                div.innerHTML = `<span class="absolute top-1 left-2 text-[10px] mono text-slate-500">PARTITION_${idxCount}</span>`;
+                document.getElementById('idx-logs').appendChild(div);
+                idxCount++; idxState = 'NOMINAL';
+                document.getElementById('idx-status').innerText = "NOMINAL";
+                document.querySelectorAll('#idx-logs .log-lane').forEach(l => l.classList.remove('barrier'));
+                document.getElementById('idx-btn').disabled = false;
+            }, 2500);
+        }
+
+        function splitRange() {
+            rngState = 'SYNC';
+            const last = rngRanges[rngRanges.length - 1];
+            document.getElementById('rng-status').innerText = `SYNCING RANGE [${last.s}-${last.e}]`;
+            document.getElementById(last.id).classList.add('barrier');
+            document.getElementById('rng-btn').disabled = true;
+
+            setTimeout(() => {
+                const mid = Math.floor((last.s + last.e) / 2);
+                const oldEnd = last.e;
+                last.e = mid;
+                document.getElementById(last.id).querySelector('span').innerText = `RANGE [${last.s}-${mid}]`;
+                document.getElementById(last.id).classList.remove('barrier');
+
+                const newId = `rng-l${rngRanges.length}`;
+                const newR = { s: mid + 1, e: oldEnd, id: newId };
+                rngRanges.push(newR);
+
+                const div = document.createElement('div');
+                div.className = 'log-lane new-lane'; div.id = newId;
+                div.innerHTML = `<span class="absolute top-1 left-2 text-[10px] mono text-slate-500">RANGE [${newR.s}-${newR.e}]</span>`;
+                document.getElementById('rng-logs').appendChild(div);
+                
+                rngState = 'NOMINAL';
+                document.getElementById('rng-status').innerText = "NOMINAL";
+                document.getElementById('rng-btn').disabled = false;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
