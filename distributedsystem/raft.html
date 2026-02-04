@@ -3,65 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Consensus Lab | Raft Engineering Suite</title>
+    <title>Raft Consensus: Chaos & Recovery Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .node { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+        .node { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; border-width: 2px; }
         .leader { border-color: #3b82f6 !important; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
-        .candidate { border-color: #f59e0b !important; animation: pulse-gold 1s infinite; }
-        .dead { filter: grayscale(1) opacity(0.3); border-style: dashed !important; }
-        .packet { position: absolute; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; z-index: 100; transition: all 0.8s ease-in-out; }
-        .pk-append { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
-        .pk-vote { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-        @keyframes pulse-gold { 0%, 100% { border-color: #f59e0b; } 50% { border-color: #78350f; } }
-        .log-entry { font-size: 0.6rem; padding: 2px 4px; margin: 1px 0; border-radius: 3px; border: 1px solid transparent; }
+        .dead { filter: grayscale(1) opacity(0.2); border-style: dashed !important; border-color: #475569 !important; }
+        .recovering { animation: pulse-blue 1s infinite; border-color: #60a5fa !important; }
+        @keyframes pulse-blue { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .packet { position: absolute; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; z-index: 100; transition: all 0.6s ease-in; }
+        .pk-append { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+        .log-entry { font-size: 0.6rem; padding: 2px 4px; margin: 2px 0; border-radius: 4px; border: 1px solid transparent; }
         .committed { background: #065f46; color: #a7f3d0; border-color: #059669; }
         .uncommitted { background: #78350f; color: #fde68a; border-color: #b45309; }
-        .progress-bar { height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; }
+        .progress-bar { height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; margin-top: 4px; }
         .progress-fill { height: 100%; background: #3b82f6; width: 0%; transition: width 0.1s linear; }
     </style>
 </head>
 <body class="p-6">
-    <div class="max-w-[1600px] mx-auto space-y-8">
-        <header class="flex justify-between items-center bg-slate-900/50 p-6 rounded-3xl border border-slate-800">
+    <div class="max-w-[1400px] mx-auto space-y-6">
+        <header class="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-wrap justify-between items-center gap-4">
             <div>
-                <h1 class="text-2xl font-black tracking-tight uppercase">Raft <span class="text-blue-500">System Dynamics</span></h1>
-                <div class="flex gap-4 mt-1">
-                    <span id="quorum-stat" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">QUORUM OK</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">Term: <span id="display-term">1</span></span>
-                </div>
+                <h1 class="text-xl font-black uppercase tracking-tighter">Raft <span class="text-blue-500">Chaos Engine</span></h1>
+                <p class="text-slate-500 text-[10px] mono">Quorum: <span id="q-val">3</span>/5 | Term: <span id="t-val">1</span></p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="triggerWrite()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold text-sm transition">Client Write</button>
-                <button onclick="killLeader()" class="bg-red-600/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl font-bold text-sm hover:bg-red-500/20">Kill Leader</button>
-                <button onclick="healAll()" class="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 px-4 py-2 rounded-xl font-bold text-sm hover:bg-emerald-500/20">Heal & Recovery Trace</button>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="triggerWrite()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-xs font-bold transition">Client Write</button>
+                <button onclick="killLeader()" class="bg-red-950 text-red-400 border border-red-900/50 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-900 transition">Kill Leader</button>
+                <button onclick="killRandom()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition">Kill Random Node</button>
+                <button onclick="healNode()" class="bg-emerald-950 text-emerald-400 border border-emerald-900/50 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-900 transition">Heal One Node</button>
             </div>
         </header>
 
-        <div class="grid grid-cols-12 gap-8">
+        <div class="grid grid-cols-12 gap-6">
             <div class="col-span-12 lg:col-span-8 space-y-6">
-                <div id="net-plane" class="relative h-[400px] bg-slate-900/20 rounded-[3rem] border border-slate-800/50 flex justify-around items-center px-10 overflow-hidden">
+                <div id="net-plane" class="relative h-72 bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 flex justify-around items-center px-10 overflow-hidden">
                     </div>
-                <div class="grid grid-cols-5 gap-4" id="log-viz">
+                <div class="grid grid-cols-5 gap-3" id="log-viz">
                     </div>
             </div>
 
             <div class="col-span-12 lg:col-span-4 space-y-6">
-                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Election Monitor</h3>
-                    <div id="election-status" class="space-y-4">
-                        </div>
-                </div>
-
-                <div class="bg-black/40 border border-slate-800 p-6 rounded-3xl flex flex-col h-[400px]">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span> Recovery Trace
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl h-[600px] flex flex-col">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase mb-4 flex justify-between">
+                        <span>Recovery & Consensus Trace</span>
+                        <button onclick="document.getElementById('trace').innerHTML=''" class="hover:text-white">Clear</button>
                     </h3>
-                    <div id="trace-log" class="flex-1 overflow-y-auto space-y-3 mono text-[10px] text-slate-400">
-                        <div class="italic text-slate-600">Waiting for system events...</div>
+                    <div id="trace" class="flex-1 overflow-y-auto space-y-2 mono text-[10px] pr-2">
+                        <div class="text-slate-600 italic">System initialized. Awaiting commands...</div>
                     </div>
                 </div>
             </div>
@@ -72,19 +64,18 @@
         const NODE_COUNT = 5;
         let nodes = [];
         let globalTerm = 1;
-        let isSimulating = true;
 
         class Node {
             constructor(id) {
                 this.id = id;
                 this.role = id === 0 ? 'leader' : 'follower';
                 this.isAlive = true;
-                this.wal = [];
+                this.isRecovering = false;
+                this.wal = []; // {idx, term, val, committed}
                 this.db = 0;
                 this.term = 1;
-                this.electionTimeout = Math.random() * 5000 + 5000;
                 this.timer = 0;
-                this.isSlow = id === 4; // Node 4 is the "Slow Node"
+                this.electionTimeout = Math.random() * 4000 + 4000;
             }
         }
 
@@ -95,66 +86,37 @@
         }
 
         function tick() {
-            if (!isSimulating) return;
-            
             nodes.forEach(n => {
                 if (!n.isAlive) return;
-
-                if (n.role === 'leader') {
-                    n.timer = 0; // Leaders don't time out
-                    if (Date.now() % 2000 < 100) broadcast(n, 'heartbeat');
-                } else {
+                if (n.role !== 'leader') {
                     n.timer += 100;
-                    if (n.timer >= n.electionTimeout) {
-                        attemptElection(n);
-                    }
+                    if (n.timer >= n.electionTimeout) startElection(n);
                 }
             });
-            updateUI();
+            updateBars();
         }
 
-        function attemptElection(candidate) {
-            candidate.role = 'candidate';
-            candidate.term++;
-            candidate.timer = 0;
-            globalTerm = Math.max(globalTerm, candidate.term);
-            
-            addTrace(`[ELECTION] N${candidate.id} timed out. Starting election for Term ${candidate.term}`, "text-yellow-500");
-            
-            let votes = 1; // Votes for self
-            nodes.forEach(follower => {
-                if (follower.id !== candidate.id && follower.isAlive) {
-                    sendPacket(candidate.id, follower.id, 'pk-vote', () => {
-                        // Safety Check: Vote only if candidate's term is >= mine 
-                        // and log is as long as mine
-                        if (candidate.term > follower.term && candidate.wal.length >= follower.wal.length) {
-                            follower.term = candidate.term;
-                            votes++;
-                            addTrace(`[VOTE] N${follower.id} granted vote to N${candidate.id}`, "text-slate-500");
-                            if (votes >= 3 && candidate.role === 'candidate') {
-                                winElection(candidate);
-                            }
-                        }
-                    });
-                }
-            });
-        }
+        function startElection(candidate) {
+            const alive = nodes.filter(n => n.isAlive).length;
+            if (alive < 3) return; // Cannot win without quorum
 
-        function winElection(candidate) {
+            globalTerm++;
             nodes.forEach(n => n.role = 'follower');
             candidate.role = 'leader';
-            addTrace(`[LEADER] N${candidate.id} won election for Term ${candidate.term}`, "text-blue-400 font-bold");
+            candidate.term = globalTerm;
+            candidate.timer = 0;
+            addTrace(`[ELECTION] Node ${candidate.id} became Leader for Term ${globalTerm}`, "text-blue-400");
             render();
         }
 
         async function triggerWrite() {
             const leader = nodes.find(n => n.role === 'leader' && n.isAlive);
-            if (!leader) return addTrace("[ERROR] Write failed: No leader in cluster", "text-red-500");
-
+            if (!leader) return addTrace("[FAIL] Write rejected: No Leader", "text-red-500");
+            
             const aliveCount = nodes.filter(n => n.isAlive).length;
-            if (aliveCount < 3) return addTrace("[SAFETY] Quorum lost. Write rejected.", "text-red-500");
+            if (aliveCount < 3) return addTrace("[SAFETY] Write rejected: No Quorum", "text-red-500");
 
-            const val = Math.floor(Math.random() * 100);
+            const val = Math.floor(Math.random() * 100) + 1;
             const idx = leader.wal.length;
             const entry = { idx, term: leader.term, val, committed: false };
             
@@ -162,26 +124,24 @@
             addTrace(`[WAL] Leader N${leader.id} appended Idx:${idx}. Replicating...`);
             render();
 
-            nodes.forEach(target => {
-                if (target.id !== leader.id && target.isAlive) {
-                    const delay = target.isSlow ? 2000 : 0;
-                    setTimeout(() => {
-                        sendPacket(leader.id, target.id, 'pk-append', () => {
-                            target.wal[idx] = { ...entry };
-                            render();
-                            sendPacket(target.id, leader.id, 'pk-append', () => checkCommit(idx));
-                        });
-                    }, delay);
+            nodes.forEach(n => {
+                if (n.id !== leader.id && n.isAlive) {
+                    sendPacket(leader.id, n.id, 'pk-append', () => {
+                        n.wal[idx] = {...entry};
+                        render();
+                        sendPacket(n.id, leader.id, 'pk-append', () => finalizeCommit(idx));
+                    });
                 }
             });
         }
 
-        function checkCommit(idx) {
+        function finalizeCommit(idx) {
             const leader = nodes.find(n => n.role === 'leader');
             if (!leader) return;
-            const count = nodes.filter(n => n.isAlive && n.wal[idx] && n.wal[idx].val === leader.wal[idx].val).length;
-            if (count >= 3 && !leader.wal[idx].committed) {
-                addTrace(`[COMMIT] Idx:${idx} reached quorum. Applying to DB.`, "text-emerald-400");
+            const acks = nodes.filter(n => n.isAlive && n.wal[idx] && n.wal[idx].val === leader.wal[idx].val).length;
+            
+            if (acks >= 3 && !leader.wal[idx].committed) {
+                addTrace(`[COMMIT] Quorum reached for Idx:${idx}. Applying to DB.`, "text-emerald-400");
                 nodes.forEach(n => {
                     if (n.wal[idx]) {
                         n.wal[idx].committed = true;
@@ -192,6 +152,46 @@
             }
         }
 
+        function killLeader() {
+            const l = nodes.find(n => n.role === 'leader');
+            if (l) {
+                l.isAlive = false;
+                addTrace(`[KILL] Leader Node ${l.id} terminated.`, "text-red-500");
+                render();
+            }
+        }
+
+        function killRandom() {
+            const alive = nodes.filter(n => n.isAlive);
+            if (alive.length === 0) return;
+            const target = alive[Math.floor(Math.random() * alive.length)];
+            target.isAlive = false;
+            addTrace(`[KILL] Node ${target.id} terminated.`, "text-orange-500");
+            render();
+        }
+
+        async function healNode() {
+            const dead = nodes.find(n => !n.isAlive);
+            if (!dead) return;
+
+            dead.isAlive = true;
+            dead.isRecovering = true;
+            dead.timer = 0;
+            addTrace(`[HEAL] Node ${dead.id} rebooting. Initiating log sync...`, "text-emerald-400");
+            render();
+
+            const leader = nodes.find(n => n.role === 'leader' && n.isAlive);
+            if (leader) {
+                await new Promise(r => setTimeout(r, 1000));
+                // Simulate log reconciliation (Catch-up)
+                dead.wal = JSON.parse(JSON.stringify(leader.wal));
+                dead.db = leader.db;
+                addTrace(`[SYNC] Node ${dead.id} reconciled ${dead.wal.length} entries. DB synced to ${dead.db}.`, "text-blue-300");
+            }
+            dead.isRecovering = false;
+            render();
+        }
+
         function sendPacket(from, to, type, cb) {
             const plane = document.getElementById('net-plane');
             const start = document.getElementById(`node-${from}`).getBoundingClientRect();
@@ -200,96 +200,63 @@
 
             const p = document.createElement('div');
             p.className = `packet ${type}`;
-            p.style.left = (start.left - container.left + 30) + 'px';
-            p.style.top = (start.top - container.top + 30) + 'px';
+            p.style.left = (start.left - container.left + 35) + 'px';
+            p.style.top = (start.top - container.top + 35) + 'px';
             plane.appendChild(p);
 
             setTimeout(() => {
-                p.style.left = (end.left - container.left + 30) + 'px';
-                p.style.top = (end.top - container.top + 30) + 'px';
+                p.style.left = (end.left - container.left + 35) + 'px';
+                p.style.top = (end.top - container.top + 35) + 'px';
             }, 50);
-            setTimeout(() => { p.remove(); if(cb) cb(); }, 800);
+            setTimeout(() => { p.remove(); if(cb) cb(); }, 650);
         }
 
         function addTrace(msg, color="text-slate-400") {
-            const log = document.getElementById('trace-log');
-            if (log.innerHTML.includes("Waiting")) log.innerHTML = "";
-            log.innerHTML = `<div class="py-1 border-b border-slate-800/50 ${color}">${msg}</div>` + log.innerHTML;
+            const t = document.getElementById('trace');
+            if (t.innerHTML.includes("Waiting")) t.innerHTML = "";
+            t.innerHTML = `<div class="py-1 border-b border-slate-800/50 ${color}">[${new Date().toLocaleTimeString().split(' ')[0]}] ${msg}</div>` + t.innerHTML;
         }
 
-        function killLeader() {
-            const l = nodes.find(n => n.role === 'leader');
-            if (l) {
-                l.isAlive = false;
-                addTrace(`[CRASH] Leader N${l.id} died. Cluster timing out...`, "text-red-500");
-            }
-            render();
-        }
-
-        async function healAll() {
-            const dead = nodes.filter(n => !n.isAlive);
-            dead.forEach(n => {
-                n.isAlive = true;
-                n.timer = 0;
-                addTrace(`[RECOVERY] N${n.id} back online. Reconciling logs...`, "text-emerald-400");
-            });
-            const leader = nodes.find(n => n.role === 'leader');
-            if (leader) {
-                nodes.forEach(n => {
-                    n.wal = JSON.parse(JSON.stringify(leader.wal));
-                    n.db = leader.db;
-                });
-            }
-            render();
-        }
-
-        function updateUI() {
-            document.getElementById('display-term').innerText = globalTerm;
-            const alive = nodes.filter(n => n.isAlive).length;
-            const q = document.getElementById('quorum-stat');
-            if (alive < 3) {
-                q.innerText = "QUORUM LOST"; q.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20";
-            } else {
-                q.innerText = "QUORUM OK"; q.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-            }
-
+        function updateBars() {
+            document.getElementById('t-val').innerText = globalTerm;
             nodes.forEach(n => {
                 const fill = document.getElementById(`fill-${n.id}`);
-                if (fill) fill.style.width = (n.role === 'leader' ? 0 : (n.timer / n.electionTimeout) * 100) + '%';
+                if (fill) {
+                    const progress = n.role === 'leader' ? 0 : (n.timer / n.electionTimeout) * 100;
+                    fill.style.width = Math.min(progress, 100) + '%';
+                }
             });
         }
 
         function render() {
             const plane = document.getElementById('net-plane');
             const logViz = document.getElementById('log-viz');
-            const elect = document.getElementById('election-status');
-            plane.innerHTML = ''; logViz.innerHTML = ''; elect.innerHTML = '';
+            plane.innerHTML = ''; logViz.innerHTML = '';
 
             nodes.forEach(n => {
-                // Node Visual
                 const nEl = document.createElement('div');
                 nEl.id = `node-${n.id}`;
-                nEl.className = `node w-20 h-20 rounded-3xl border-2 flex flex-col items-center justify-center bg-slate-900 ${!n.isAlive ? 'dead' : n.role === 'leader' ? 'leader' : n.role === 'candidate' ? 'candidate' : 'border-slate-700'}`;
-                nEl.innerHTML = `<span class="text-[8px] font-bold text-slate-500 mb-1">N${n.id}${n.isSlow ? ' (SLOW)' : ''}</span><span class="text-2xl">${!n.isAlive ? '💀' : n.role === 'leader' ? '👑' : '🖥️'}</span>`;
+                nEl.className = `node w-20 h-20 rounded-3xl bg-slate-800 flex flex-col items-center justify-center border-slate-700 ${!n.isAlive ? 'dead' : n.isRecovering ? 'recovering' : n.role === 'leader' ? 'leader' : ''}`;
+                nEl.innerHTML = `
+                    <span class="text-[9px] font-bold text-slate-500">N${n.id}</span>
+                    <span class="text-2xl">${!n.isAlive ? '💀' : n.role === 'leader' ? '👑' : '🖥️'}</span>
+                    <div class="progress-bar w-12"><div id="fill-${n.id}" class="progress-fill"></div></div>
+                `;
                 plane.appendChild(nEl);
 
-                // Log Visual
                 const lEl = document.createElement('div');
-                lEl.className = "bg-slate-900/80 border border-slate-800 p-3 rounded-2xl min-h-[160px]";
-                lEl.innerHTML = `<div class="text-[10px] font-bold text-blue-400 mb-2 border-b border-slate-800 pb-1 flex justify-between"><span>N${n.id}</span><span class="text-slate-500">DB:${n.db}</span></div>
-                    ${n.wal.map(e => `<div class="log-entry ${e.committed ? 'committed' : 'uncommitted'}">I:${e.idx} T:${e.term} V:${e.val}</div>`).join('')}`;
+                lEl.className = "bg-slate-900 border border-slate-800 p-3 rounded-2xl min-h-[180px] shadow-lg";
+                lEl.innerHTML = `
+                    <div class="text-[10px] font-bold text-blue-400 mb-2 border-b border-slate-800 pb-1 flex justify-between">
+                        <span>N${n.id}</span><span class="text-slate-500">DB:${n.db}</span>
+                    </div>
+                    ${n.wal.map(e => `<div class="log-entry ${e.committed ? 'committed' : 'uncommitted'}">I:${e.idx} T:${e.term} V:${e.val}</div>`).join('')}
+                `;
                 logViz.appendChild(lEl);
-
-                // Election Timers
-                const eEl = document.createElement('div');
-                eEl.className = "space-y-1";
-                eEl.innerHTML = `<div class="flex justify-between text-[10px] font-bold"><span class="text-slate-400">Node ${n.id}</span><span class="text-slate-600">${n.role}</span></div>
-                    <div class="progress-bar"><div id="fill-${n.id}" class="progress-fill"></div></div>`;
-                elect.appendChild(eEl);
             });
         }
 
-            init();
+        init();
     </script>
 </body>
 </html>
