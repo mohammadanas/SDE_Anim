@@ -1,0 +1,176 @@
+Read NorthGaurd:
+
+https://www.linkedin.com/blog/engineering/infrastructure/introducing-northguard-and-xinfra
+
+Challenges
+
+1. Scalability: Metadata and cluster size is bottleneck
+2. Operability: Load balancing issue because oversized cluster 100, separate ecosystem is required to keep clusters runing.
+3. Availability: Limited by Partitions, its a single unit of replication, borker failure results into stop the world partition movement.
+4. Consistecny: Trade-off, availability is of more focus
+5. Durability: Relatively low durability not enough for new use cases.
+
+Requirement: 
+1. Scale: even load distribution
+2. Fast cluster deployments
+3. Strong consistency for both data and metadata 
+4. High throughput
+5. Low Latency 
+6. High Availability 
+7. Low Cost
+8. Hardware compatibility 
+9. Pluggability 
+10. Testbility 
+11. Replayable streams.
+
+
+NorthGaurd: Log Storage System.
+
+Key Features 
+a) Scalability: Shards data and metadata and minimal global state, decentralise group membership. (Metadata in Kafka is not sharded)
+b) Operability: Log striping to distribute load across cluster evenly by design.
+
+It runs as cluster of brokers, which only interacts with client it connects to and other brokers in the cluster.
+
+Data Model: 
+
+1. Record: Client produce and consumer records, [Header, Key, Value], sequence of bytes, carries a stamp logical offset from the beginging of the segment.
+2. Segments: Sequence of records, segments are unit of replication, max segement size 1 GB.
+3. Range: Sequence of segments associated with contigous range of key space, 
+	3.1 Active range can have, 
+		a. No segments 
+		b. Sealed segments, 
+		c. Sealed and last Active Segments 
+	3.2 Sealed range can have, 
+		a. No segments 
+		b. Sealed segments, 
+
+4. Topic: Named collection of ranges that cover full keyspaces. Topic ranges can be merged or split
+	a. Spliting range seales that range and creates two new ranges.
+	b. Merging two range seales two ranges and creates a new range. A range can only be merged with its unique buddy range 
+	c. A topic can be sealed and deleted.
+
+5. Topic Configuration:  
+	5.1 Storage Policy, name, retention period, set of constraints.
+	5.2 Constrains expression defines which brokers are allowed as replica of a segment, and how many
+	5.3 Policy and contraints used to distribute replicas that allows saftely deploy builds and configs to clusters in a constant time.
+	5.4 Policy + constraint enable rack aware replica placement. 
+
+Segments states: 
+1. Active, record can be appended up to threshold 
+2. Sealed, immutable, Segment is sealed, replica failure, reaching threshold of 1 GB size, threshold of 1 hour.
+
+Log Striping: 
+
+1. Coarse grained unit of replication leads to more skewness.
+2. Borker with more log replicas than other causes new broker to remain empty for longer duration 
+3. Broker with resource intensive logs.
+
+Northguard solve this issue by log stripping, logs are broken in smaller chunks to balance IO.
+Range = log, segment = chunk 
+
+In Kafka bottleneck is that new broker required to move some logs into it, while north guard completely avoids because segments are frequently created and new broker organically get segments replica.
+
+Ranges vs Indexed Partition:
+
+Requirement: 
+
+1. Correct record to log placement by clients
+2. Minimise interruption to unrelated logs
+3. Maintain some level of ordering guarantees
+4. Stream processing framework to avoid shuffle.
+
+Indexed partition on split or shard relocation would have required stop the world sync the ranges help avoid this by only affecting producing client for that range. Records are mapped to log partition, on partiion split broker need to stop producer to rebalance partition and assigned keys to log partition, whereas range split only affects, producer get failure or wait message once range split and new ranges are assigned to broker clients can resume.
+
+In case of split or merge, sealed range will always have events which comes before.
+
+Stream processing that require shuffule in case of indexed partition can fully avoid shuffle becase joing multiple stream requires only range alignment not partition alignment. 
+
+File Per Segment Store:
+
+1. Write Ahead log
+2. Direct I/O for data files (not page cache)
+3. Sparse index in RockDB  
+4. Application level caching 
+5. Synchronous fsync on WAL + segmenet files 
+6. Batched Append.
+
+This scheme works because, 
+1. Predictable append patterns 
+2. Known hot read streams 
+3. Long tail cold data (old segments)
+
+
+Cache degradation happens when cache is full with useless data (dirty pages), its cache pollution 
+
+In linux page cache, 
+1. Kernel decides what stays hot 
+2. Sequential scan looks importand thus cache is populated with useless data from consumers perspective
+3. Large read evicts small hot working sets
+4. Kernel has no clue which data matters to your application.
+
+Without Direct IO when replication or maintainance needs old segments: 
+1. Page cahce is already polluted.
+2. Hot metadata and rocksDB blocks get evicted
+3. Read amplification spikes
+
+In case of data backfill, old segments are directly read from disk, page cache is untouched.
+
+Key Aspect why direct IO works
+
+1. Append only segments 
+2. Known Access Pattern 
+3. Large cold history 
+4. Replication heavy
+5. Strong durability guarantees.
+
+
+Metadata model 
+
+Metadata stores, topics, ranges, segments 
+
+1. Vnode store shard of the cluster's metadata, it made fault tolerant by state machine Raft replication.
+
+Dynamically sharded replicated state machine: it is collection of vnodes covering hash ring. Metadata sharded across bnodes using consistent hashsing.
+
+Topic metadata is hashed by topic name, while range and segments metadata us hashed by range ID.
+
+Clusters can be configured with a metadata policy, list of constraints that define how vnodes are chosen for replica.
+
+Coordinator tracks change to topics and ranges it owns, like sealing/deleting topics, spliting/merging ranges from that topic, range active/sealed/deleting state, creation, retention, topic name, segment metadata, start offset, length of segment.  
+
+Cluster state membership uses SWIM protocol for membership, its scalable membership protocol, it employs random probing for failure detection but infection style dissemination for membership changes and broadcast. 
+
+Detection: Every T internval each node N1 pings random N2 node if no response it ask k nodes to ping N2 if still no response N2 marked dead, otherwise last heard of updated to current time.
+Upon detection multicast message is sent to other nodes in the cluster, similarly new node entry to old node exit is disseminated through multicast broadcast. usually these message are piggybacked send in next ping, this mechanism is called gossip dissemination
+
+NorthGuard uses it to broadcast minimal cluster states
+1. Basic host and port
+2. Attributes of the broker 
+3. DSM Hash ring, vnodes start and end boundry on the ring and it leader, current term and replica
+
+Protocol: 
+
+CP APIs are all uniary one request one reponse, proxy redirect to leader nodes in the cluster, 
+while producer and consumers are sessionised stream protocol, in a way consumers are pinned to leader of the segment and consumes all the events from there.
+Sessionised means producer or consumer can avoid protocol overhead, meaning request travelling from node to leader and back again.
+
+Producing client generates stream Id and initiates handshake with active segment leader, initial window size accepted by broker. broker replies to producer for only commited records, for N append request broker can send M response. Similarly consumer initiates handshake and sends reads telling their current offset and udpated window size. 
+Broker send pushes as long as within window.
+
+Producer                                        
+1. Append, StreamId, SeqNo, Records             
+
+Consumer            
+1. Read, SteamId, Offset, Window
+
+Replica
+1. StreamId, Offset, Committed, Records
+
+
+Migration required defining virtual topics (XInfra), PubSub vertualisation client will not be affected by migration.
+ ---------------------------------
+|     	  XInfra Topic            |
+|---------------------------------|
+|Epoch-0 Kafka  |   Epoch-1 in NG |
+ ----------------------------------
