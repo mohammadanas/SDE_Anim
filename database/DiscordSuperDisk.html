@@ -3,116 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Super Disk | Stripe & Mirror Simulation</title>
+    <title>Discord Super Disk | Production Simulation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
-        body { background: #0c0c0e; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700&display=swap');
+        body { background: #0b0b0e; color: #e2e8f0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; margin: 0; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .ssd-node { border: 2px solid #1e293b; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
-        .ssd-node.active-write { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-        .ssd-node.active-read { border-color: #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
-        .ssd-node.corrupted { border-color: #ef4444; background: rgba(127, 29, 29, 0.2); }
-        .stripe-indicator { position: absolute; top: 0; left: 0; height: 100%; width: 4px; background: #3b82f6; opacity: 0; }
-        .packet { position: absolute; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono'; z-index: 100; pointer-events: none; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
-        .io-critical { color: #f87171; animation: pulse-red 1s infinite; }
-        @keyframes pulse-red { 50% { opacity: 0.5; } }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        
+        .scroll-area { 
+            height: calc(100vh - 460px); 
+            min-height: 280px;
+            overflow-y: auto; 
+            scrollbar-width: thin;
+        }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .ssd-node { border: 1px solid #1e293b; background: rgba(15, 23, 42, 0.8); transition: all 0.2s; position: relative; }
+        .ssd-node.corrupted { border: 2px solid #ef4444; background: rgba(127, 29, 29, 0.3); }
+        .raid-tag { position: absolute; top: 8px; right: 8px; font-size: 8px; font-weight: bold; color: #475569; }
+        .packet { position: absolute; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono'; z-index: 999; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #chart-wrapper { position: relative; height: 180px; width: 100%; }
+        .iowait-warn { color: #f87171; animation: flash 0.8s infinite; }
+        @keyframes flash { 50% { opacity: 0.4; } }
     </style>
 </head>
-<body class="p-6 lg:p-12">
-    <div class="max-w-7xl mx-auto">
-        <header class="flex flex-col lg:flex-row justify-between items-end mb-12 gap-6 border-b border-gray-800 pb-8">
-            <div>
-                <h1 class="text-4xl font-black text-white tracking-tighter mb-2">SUPER DISK <span class="text-blue-500 underline decoration-4 underline-offset-8">ENGINE</span></h1>
-                <p class="text-gray-400 font-medium">Visualizing Discord's RAID 1 (Mirror) over RAID 0 (Stripe) Architecture</p>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full lg:w-auto">
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
-                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">Stripe Width</div>
-                    <div id="stripe-width-val" class="text-xl mono font-bold text-blue-400">4 SSDs</div>
-                </div>
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
-                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">Read Latency</div>
-                    <div id="lat-val" class="text-xl mono font-bold text-green-400">0.45ms</div>
-                </div>
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
-                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">System I/O Wait</div>
-                    <div id="iowait-val" class="text-xl mono font-bold text-white">0.1%</div>
-                </div>
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
-                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">Throughput</div>
-                    <div id="ops-val" class="text-xl mono font-bold text-blue-500">0 op/s</div>
-                </div>
-            </div>
-        </header>
+<body class="p-4 flex flex-col">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
+        <div>
+            <span class="text-[10px] text-blue-500 font-black tracking-widest uppercase">Storage Profile</span>
+            <div id="mode-status" class="text-sm font-bold text-blue-400">SUPER DISK (RAID 1 Mirror)</div>
+        </div>
+        <div>
+            <span class="text-[10px] text-gray-500 font-bold uppercase">CPU I/O Wait</span>
+            <div id="iowait-val" class="text-lg mono font-bold text-white">0.1%</div>
+        </div>
+        <div>
+            <span class="text-[10px] text-gray-500 font-bold uppercase">Latency (p99)</span>
+            <div id="lat-val" class="text-lg mono font-bold text-green-400">0.45ms</div>
+        </div>
+        <div>
+            <span class="text-[10px] text-gray-500 font-bold uppercase">Writes/Reads</span>
+            <div id="ops-val" class="text-lg mono font-bold text-white">0 / 0</div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="auto-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-[10px] font-black uppercase transition-all">Start Loop</button>
+            <button id="mode-btn" class="flex-1 bg-gray-800 hover:bg-gray-700 py-2 rounded-lg text-[10px] font-black uppercase transition-all">Toggle Mode</button>
+        </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div class="lg:col-span-3 space-y-6">
-                <div class="bg-gray-900/80 backdrop-blur border border-gray-800 p-6 rounded-2xl shadow-2xl">
-                    <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest border-b border-gray-800 pb-2">Disk Controller</h3>
-                    
-                    <div class="space-y-4">
-                        <button onclick="toggleAuto()" id="auto-btn" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-900/20">
-                            <i data-lucide="play" class="w-5 h-5 text-white"></i> Start Auto-Stream
-                        </button>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="writeAction()" class="py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-[11px] font-bold uppercase">Manual Write</button>
-                            <button onclick="readAction()" class="py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-[11px] font-bold uppercase">Manual Read</button>
-                        </div>
-
-                        <div class="pt-6 border-t border-gray-800">
-                            <label class="text-[10px] text-gray-500 uppercase font-bold mb-3 block">Configure RAID 0 (Add/Remove SSDs)</label>
-                            <div class="flex items-center justify-between bg-black p-3 rounded-xl border border-gray-800">
-                                <button onclick="updateSSD(-1)" class="text-blue-500 hover:bg-blue-900/40 p-2 rounded-lg transition"><i data-lucide="minus"></i></button>
-                                <span class="mono text-lg font-bold" id="ssd-display">4</span>
-                                <button onclick="updateSSD(1)" class="text-blue-500 hover:bg-blue-900/40 p-2 rounded-lg transition"><i data-lucide="plus"></i></button>
-                            </div>
-                        </div>
-
-                        <button onclick="toggleCorruption()" id="fault-btn" class="w-full py-3 border-2 border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-xl text-xs font-black transition-all mt-4">
-                            CORRUPT LOCAL SSD SECTOR
-                        </button>
+    <div class="grid grid-cols-12 gap-4 flex-1 overflow-hidden">
+        <div class="col-span-3 flex flex-col gap-4">
+            <div class="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl">
+                <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-3">Hardware Layer</h3>
+                <div class="flex items-center justify-between bg-black p-2 rounded-lg border border-gray-800 mb-2">
+                    <span class="text-[10px] mono">STRIPE WIDTH</span>
+                    <div class="flex gap-3">
+                        <button id="ssd-minus" class="text-blue-500 font-bold">-</button>
+                        <span id="ssd-count-display" class="mono text-xs">4</span>
+                        <button id="ssd-plus" class="text-blue-500 font-bold">+</button>
                     </div>
                 </div>
+                <button id="fault-btn" class="w-full py-2 border border-red-900 text-red-500 text-[10px] font-bold rounded-lg hover:bg-red-500/10 uppercase transition-all">Induce NVMe-0 Failure</button>
+            </div>
 
-                <div class="bg-black border border-gray-800 p-6 rounded-2xl h-[300px] flex flex-col shadow-inner">
-                    <h3 class="text-xs font-bold uppercase text-gray-500 mb-4">Kernel Event Log</h3>
-                    <div id="logs" class="flex-1 overflow-y-auto text-[10px] mono space-y-2 text-gray-400 scrollbar-hide"></div>
+            <div class="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl flex-1 min-h-[220px]">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase mb-4">Storage Performance Trend</h3>
+                <div id="chart-wrapper">
+                    <canvas id="latencyChart" width="300" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-9 bg-gray-950/50 border border-gray-800 rounded-3xl p-6 relative flex flex-col">
+            <div class="flex justify-center mb-6">
+                <div id="db-node" class="bg-gray-900 border-2 border-blue-500/50 p-4 rounded-xl flex flex-col items-center z-50 shadow-2xl">
+                    <i data-lucide="database" class="w-6 h-6 text-blue-500 mb-1"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-white">ScyllaDB Instance</span>
                 </div>
             </div>
 
-            <div class="lg:col-span-9 relative">
-                <div class="flex justify-center mb-16">
-                    <div id="db-node" class="bg-gray-900 border-2 border-blue-500 p-8 rounded-3xl flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.15)] z-20">
-                        <i data-lucide="database" class="w-12 h-12 text-blue-500 mb-2"></i>
-                        <span class="font-black text-white tracking-widest uppercase">ScyllaDB Node</span>
-                        <div id="stream-status" class="flex items-center gap-2 mt-2">
-                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span class="text-[10px] text-green-500 mono font-bold">I/O READY</span>
-                        </div>
+            <div class="grid grid-cols-2 gap-8 flex-1 overflow-hidden">
+                <div class="flex flex-col">
+                    <div class="text-[10px] font-black text-blue-500 mb-4 uppercase flex justify-between">
+                        <span>Path A: RAID 0 Local Stripe</span>
+                        <span id="path-a-label" class="text-blue-900">ACTIVE</span>
                     </div>
+                    <div id="ssd-grid" class="grid grid-cols-2 gap-3 scroll-area pr-2"></div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div class="relative bg-blue-900/5 border border-blue-900/30 rounded-3xl p-6">
-                        <div class="absolute -top-3 left-6 bg-[#0c0c0e] px-3 text-[10px] font-black text-blue-500 uppercase tracking-tighter">PATH A: RAID 0 (STRIPED LOCAL)</div>
-                        <div id="ssd-grid" class="grid grid-cols-2 gap-4">
-                            </div>
-                    </div>
-
-                    <div class="relative bg-purple-900/5 border border-purple-900/30 rounded-3xl p-6">
-                        <div class="absolute -top-3 left-6 bg-[#0c0c0e] px-3 text-[10px] font-black text-purple-500 uppercase tracking-tighter">PATH B: PERSISTENT DISK (MIRROR)</div>
-                        <div id="pd-node" class="bg-gray-900 border border-purple-500/30 rounded-2xl p-6 h-full flex flex-col min-h-[400px]">
-                            <div class="flex items-center justify-between mb-4 border-b border-gray-800 pb-4">
-                                <span class="text-[11px] font-bold text-purple-400 flex items-center gap-2"><i data-lucide="cloud"></i> NETWORK PD</span>
-                                <span class="text-[9px] mono text-gray-500">WRITE-MOSTLY</span>
-                            </div>
-                            <div id="pd-list" class="space-y-1 overflow-y-auto flex-1 pr-2 scrollbar-hide">
-                                </div>
-                        </div>
+                <div class="flex flex-col">
+                    <div class="text-[10px] font-black text-purple-500 mb-4 uppercase">Path B: Cloud PD Mirror</div>
+                    <div id="pd-container" class="bg-gray-900/50 border border-purple-900/20 rounded-xl p-4 flex-1 overflow-hidden">
+                        <div id="pd-data" class="scroll-area space-y-1 pr-2"></div>
                     </div>
                 </div>
             </div>
@@ -120,166 +104,165 @@
     </div>
 
     <script>
-        let state = { ssds: 4, auto: false, corrupt: false, ops: 0, latHistory: [] };
-        let store = new Map();
-        let streamTimer;
+        window.addEventListener('load', () => {
+            setTimeout(initApp, 100);
+        });
 
-        function init() {
-            lucide.createIcons();
-            renderLayout();
-            setInterval(calcMetrics, 1000);
-        }
+        function initApp() {
+            let config = { ssds: 4, isAuto: false, isCorrupt: false, mode: 'super' };
+            let metrics = { writes: 0, reads: 0, lat: 0.5, histS: Array(30).fill(null), histT: Array(30).fill(null), labels: Array(30).fill('') };
+            let storage = new Map();
+            let chart, loop;
 
-        function renderLayout() {
-            const grid = document.getElementById('ssd-grid');
-            grid.innerHTML = '';
-            for(let i=0; i<state.ssds; i++) {
-                grid.innerHTML += `
-                    <div id="ssd-${i}" class="ssd-node bg-gray-900 rounded-2xl p-4 h-40 flex flex-col">
-                        <div class="stripe-indicator" id="stripe-${i}"></div>
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[9px] mono text-gray-500">NVMe SLOT ${i}</span>
-                            <i data-lucide="hard-drive" class="w-4 h-4 text-gray-700"></i>
-                        </div>
-                        <div id="ssd-content-${i}" class="flex-1 overflow-y-auto space-y-1 scrollbar-hide"></div>
-                    </div>
-                `;
-            }
-            lucide.createIcons();
-            if(state.corrupt) document.getElementById('ssd-0').classList.add('corrupted');
-        }
+            // --- 1. Render SSD Hardware ---
+            const renderSSDs = () => {
+                const grid = document.getElementById('ssd-grid');
+                grid.innerHTML = '';
+                for(let i=0; i<config.ssds; i++) {
+                    grid.innerHTML += `
+                        <div id="ssd-${i}" class="ssd-node rounded-xl p-3 h-28 flex flex-col ${config.isCorrupt && i === 0 ? 'corrupted' : ''}">
+                            <div class="raid-tag">NVMe PORT ${i}</div>
+                            <div id="data-list-${i}" class="flex-1 overflow-y-auto space-y-1 mt-3 scrollbar-hide"></div>
+                        </div>`;
+                }
+                lucide.createIcons();
+            };
 
-        function updateSSD(val) {
-            state.ssds = Math.max(1, Math.min(6, state.ssds + val));
-            document.getElementById('ssd-display').innerText = state.ssds;
-            document.getElementById('stripe-width-val').innerText = `${state.ssds} SSDs`;
-            renderLayout();
-            log(`Kernel: RAID 0 re-striping for ${state.ssds} devices.`, 'sys');
-        }
+            // --- 2. Chart Setup ---
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: metrics.labels,
+                    datasets: [
+                        { label: 'Super Disk', borderColor: '#3b82f6', data: metrics.histS, tension: 0.4, borderWidth: 2, pointRadius: 0 },
+                        { label: 'Cloud PD', borderColor: '#a855f7', data: metrics.histT, tension: 0.4, borderWidth: 2, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 4, grid: { color: '#1e293b' }, ticks: { font: { size: 9 }, color: '#64748b' } },
+                        x: { display: false }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
 
-        async function writeAction() {
-            const k = `key_${Math.floor(Math.random()*9999)}`;
-            const v = Math.random().toString(36).substring(7).toUpperCase();
-            const stripeIdx = Math.abs(hash(k) % state.ssds);
-            
-            state.ops++;
-            log(`WRITE: [${k}] -> Mirroring to Stripe ${stripeIdx} & PD`, 'write');
+            // --- 3. I/O Logic (70% Writes) ---
+            const processIO = async (isWrite) => {
+                if (isWrite) metrics.writes++; else metrics.reads++;
+                
+                const key = `k_${Math.floor(Math.random()*999)}`;
+                const val = Math.random().toString(36).substring(7).toUpperCase();
+                const stripeIdx = Math.floor(Math.random() * config.ssds);
 
-            // Visualizing the dual flow of RAID 1
-            animate(k, 'db-node', `ssd-${stripeIdx}`, '#3b82f6', 600);
-            animate(k, 'db-node', 'pd-node', '#a855f7', 1200);
+                if (isWrite) {
+                    // Mirroring: Write to both Path A (RAID 0) and Path B (PD)
+                    if (config.mode === 'super') animatePacket(key, 'db-node', `ssd-${stripeIdx}`, '#3b82f6');
+                    animatePacket(key, 'db-node', 'pd-container', '#a855f7');
+                    
+                    setTimeout(() => {
+                        storage.set(key, {val, stripeIdx});
+                        const html = `<div class="text-[8px] mono p-1 bg-black/40 rounded truncate border-l-2 border-blue-500">${key}:${val}</div>`;
+                        if (config.mode === 'super') document.getElementById(`data-list-${stripeIdx}`).insertAdjacentHTML('afterbegin', html);
+                        document.getElementById('pd-data').insertAdjacentHTML('afterbegin', html.replace('blue', 'purple'));
+                    }, 400);
+                } else {
+                    // Reading: Use Fast Local Path if possible
+                    const keys = Array.from(storage.keys());
+                    if (keys.length > 0) {
+                        const target = keys[Math.floor(Math.random()*keys.length)];
+                        const data = storage.get(target);
+                        
+                        if (config.mode === 'super') {
+                            if (config.isCorrupt && data.stripeIdx === 0) {
+                                // Fallback to PD on disk failure
+                                metrics.lat = 2.4 + Math.random();
+                                animatePacket(target, 'db-node', 'pd-container', '#ef4444');
+                            } else {
+                                // Fast local read
+                                metrics.lat = 0.4 + (Math.random()*0.1);
+                                animatePacket(target, 'db-node', `ssd-${data.stripeIdx}`, '#22c55e');
+                            }
+                        } else {
+                            // Traditional mode always uses PD
+                            metrics.lat = 2.1 + (Math.random()*0.4);
+                            animatePacket(target, 'db-node', 'pd-container', '#a855f7');
+                        }
+                    }
+                }
+            };
 
-            setTimeout(() => {
-                store.set(k, {v, stripeIdx});
-                const entry = `<div class="bg-gray-800/50 p-1.5 rounded text-[9px] mono text-gray-300 border-l-2 border-blue-500 truncate">${k}:${v}</div>`;
-                document.getElementById(`ssd-content-${stripeIdx}`).insertAdjacentHTML('afterbegin', entry);
-                document.getElementById(`pd-list`).insertAdjacentHTML('afterbegin', `<div class="bg-gray-800/50 p-1.5 rounded text-[9px] mono text-purple-300 border-l-2 border-purple-500 truncate">${k}:${v}</div>`);
-            }, 600);
-        }
-
-        async function readAction() {
-            const keys = Array.from(store.keys());
-            if(keys.length === 0) return writeAction();
-
-            const k = keys[Math.floor(Math.random()*keys.length)];
-            const data = store.get(k);
-            state.ops++;
-
-            if(state.corrupt && data.stripeIdx === 0) {
-                // FAILOVER SCENARIO
-                log(`READ FAIL (NVMe-0): I/O Error detected`, 'err');
-                await animate(k, 'db-node', 'ssd-0', '#ef4444', 300);
-                log(`RECOVERY: Redirecting read to Path B (PD)...`, 'sys');
-                await animate(k, 'db-node', 'pd-node', '#a855f7', 1000);
-                pushLat(2.5 + Math.random());
-            } else {
-                // NORMAL RAID 0 READ
-                log(`READ: [${k}] from Stripe ${data.stripeIdx}`, 'read');
-                const ssd = document.getElementById(`ssd-${data.stripeIdx}`);
-                ssd.classList.add('active-read');
-                await animate(k, 'db-node', `ssd-${data.stripeIdx}`, '#22c55e', 450);
-                ssd.classList.remove('active-read');
-                pushLat(0.4 + (Math.random()*0.1));
-            }
-        }
-
-        function animate(txt, fId, tId, color, ms) {
-            return new Promise(res => {
+            const animatePacket = (txt, fId, tId, color) => {
                 const f = document.getElementById(fId).getBoundingClientRect();
                 const t = document.getElementById(tId).getBoundingClientRect();
                 const p = document.createElement('div');
-                p.className = 'packet mono bg-white text-black font-bold';
-                p.style.cssText = `background:${color}; color:white; left:${f.left}px; top:${f.top}px;`;
+                p.className = 'packet mono font-bold';
+                p.style.cssText = `background:${color}; color:white; left:${f.left + f.width/2}px; top:${f.top + f.height/2}px;`;
                 p.innerText = txt;
                 document.body.appendChild(p);
-
                 p.animate([
-                    { left: `${f.left + f.width/2}px`, top: `${f.top + f.height/2}px`, opacity: 0, scale: 0.5 },
-                    { opacity: 1, offset: 0.1 },
-                    { left: `${t.left + t.width/2}px`, top: `${t.top + t.height/2}px`, opacity: 1, scale: 1 }
-                ], { duration: ms, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }).onfinish = () => { p.remove(); res(); };
+                    { left: `${f.left + f.width/2}px`, top: `${f.top + f.height/2}px`, opacity: 0 },
+                    { opacity: 1, offset: 0.15 },
+                    { left: `${t.left + t.width/2}px`, top: `${t.top + t.height/2}px`, opacity: 0 }
+                ], { duration: 600, easing: 'ease-out' }).onfinish = () => p.remove();
+            };
+
+            // --- 4. Main Event Handlers ---
+            document.getElementById('mode-btn').addEventListener('click', () => {
+                config.mode = config.mode === 'super' ? 'trad' : 'super';
+                const status = document.getElementById('mode-status');
+                const pathA = document.getElementById('path-a-label');
+                
+                if (config.mode === 'super') {
+                    status.innerText = 'SUPER DISK (RAID 1 Mirror)';
+                    status.className = 'text-sm font-bold text-blue-400';
+                    pathA.innerText = 'ACTIVE';
+                    pathA.className = 'text-blue-500';
+                } else {
+                    status.innerText = 'TRADITIONAL (PD Only)';
+                    status.className = 'text-sm font-bold text-purple-400';
+                    pathA.innerText = 'BYPASSED';
+                    pathA.className = 'text-gray-700';
+                }
             });
-        }
 
-        function toggleAuto() {
-            state.auto = !state.auto;
-            const btn = document.getElementById('auto-btn');
-            if(state.auto) {
-                btn.innerHTML = `<i data-lucide="square"></i> Stop Stream`;
-                btn.classList.replace('bg-blue-600', 'bg-red-600');
-                streamTimer = setInterval(() => Math.random() > 0.4 ? readAction() : writeAction(), 500);
-            } else {
-                btn.innerHTML = `<i data-lucide="play"></i> Start Auto-Stream`;
-                btn.classList.replace('bg-red-600', 'bg-blue-600');
-                clearInterval(streamTimer);
-            }
-            lucide.createIcons();
-        }
+            document.getElementById('auto-btn').addEventListener('click', (e) => {
+                config.isAuto = !config.isAuto;
+                e.target.innerText = config.isAuto ? 'STOP' : 'START LOOP';
+                e.target.classList.toggle('bg-blue-600'); e.target.classList.toggle('bg-red-600');
+                if(config.isAuto) loop = setInterval(() => processIO(Math.random() < 0.7), 400); // 70% Write Pressure
+                else clearInterval(loop);
+            });
 
-        function toggleCorruption() {
-            state.corrupt = !state.corrupt;
-            const btn = document.getElementById('fault-btn');
-            btn.innerText = state.corrupt ? "REBUILD ARRAY (RESYNC)" : "CORRUPT LOCAL SSD SECTOR";
-            renderLayout();
-            log(state.corrupt ? "DISK_ERR: NVMe-0 reported bad sector (0x442)" : "SYS_MSG: Array resynced and healthy.", state.corrupt ? 'err' : 'sys');
-        }
+            document.getElementById('fault-btn').addEventListener('click', (e) => {
+                config.isCorrupt = !config.isCorrupt;
+                e.target.innerText = config.isCorrupt ? "REPLACE DISK" : "INDUCE NVME-0 FAILURE";
+                renderSSDs();
+            });
 
-        function pushLat(v) {
-            state.latHistory.push(v);
-            if(state.latHistory.length > 10) state.latHistory.shift();
-        }
+            document.getElementById('ssd-plus').addEventListener('click', () => { if(config.ssds < 6) { config.ssds++; renderSSDs(); document.getElementById('ssd-count-display').innerText = config.ssds; } });
+            document.getElementById('ssd-minus').addEventListener('click', () => { if(config.ssds > 1) { config.ssds--; renderSSDs(); document.getElementById('ssd-count-display').innerText = config.ssds; } });
 
-        function calcMetrics() {
-            const avg = state.latHistory.length ? (state.latHistory.reduce((a,b)=>a+b)/state.latHistory.length) : 0.45;
-            const ioWait = Math.max(0.1, (avg - 0.45) * 40).toFixed(1);
-            
-            document.getElementById('lat-val').innerText = `${avg.toFixed(2)}ms`;
-            document.getElementById('ops-val').innerText = `${state.ops} op/s`;
-            
-            const ioEl = document.getElementById('iowait-val');
-            ioEl.innerText = `${ioWait}%`;
-            ioEl.className = `text-xl mono font-bold ${ioWait > 20 ? 'io-critical' : 'text-white'}`;
-            
-            state.ops = 0;
-        }
+            // Stats Update
+            setInterval(() => {
+                const ioWait = (metrics.lat > 1.5) ? (metrics.lat * 14).toFixed(1) : (Math.random() * 0.2).toFixed(1);
+                document.getElementById('iowait-val').innerText = `${ioWait}%`;
+                document.getElementById('iowait-val').className = ioWait > 10 ? 'text-lg mono font-bold iowait-warn' : 'text-lg mono font-bold text-white';
+                document.getElementById('lat-val').innerText = `${metrics.lat.toFixed(2)}ms`;
+                document.getElementById('ops-val').innerText = `${metrics.writes} W / ${metrics.reads} R`;
+                
+                metrics.histS.push(config.mode === 'super' ? metrics.lat : null);
+                metrics.histT.push(config.mode === 'trad' ? metrics.lat : null);
+                metrics.histS.shift(); metrics.histT.shift();
+                chart.update('none');
+                metrics.writes = 0; metrics.reads = 0;
+            }, 1000);
 
-        function log(m, t) {
-            const c = document.getElementById('logs');
-            const s = { write: 'text-blue-400', read: 'text-green-400', err: 'text-red-500 font-bold', sys: 'text-yellow-500 italic' };
-            const d = document.createElement('div');
-            d.className = s[t];
-            d.innerHTML = `> ${m}`;
-            c.prepend(d);
-            if(c.children.length > 40) c.lastChild.remove();
+            renderSSDs();
         }
-
-        function hash(s) {
-            let h = 0;
-            for(let i=0; i<s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-            return h;
-        }
-
-        window.onload = init;
     </script>
 </body>
 </html>
