@@ -7,7 +7,13 @@ https://app.codecrafters.io/courses/shell/overview
 
 ## Distributed System
 ### Northguard
-https://www.linkedin.com/blog/engineering/infrastructure/introducing-northguard-and-xinfra
-https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf
+NorthGuard Repalcement of Kafka: https://www.linkedin.com/blog/engineering/infrastructure/introducing-northguard-and-xinfra
+SWIM Membership Protocol: https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf
+
+
+##Databases
+
+### Disk
+Discord Super Disk: https://discord.com/blog/how-discord-supercharges-network-disks-for-extreme-low-latency
 
 
