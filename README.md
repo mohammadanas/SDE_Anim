@@ -8,7 +8,7 @@ https://app.codecrafters.io/courses/shell/overview
 <li> Sebastian:  https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
 
 ## Resources
-<li> https://github.com/G33kzD3n
+<li> FreeBooks: https://github.com/G33kzD3n
 
 ## Distributed System
 ### Northguard
@@ -19,6 +19,10 @@ https://app.codecrafters.io/courses/shell/overview
 
 
 ## Databases
+### Cache
+  <li>
+    Cached Partitioned Hash Table: https://people.csail.mit.edu/nickolai/papers/metreveli-cphash-tr.pdf
+
 ### Disk
 #### Basics
 <li>
