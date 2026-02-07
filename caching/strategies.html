@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Infused Caching Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            font-family: 'Space+Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glow-card {
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .node {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            font-weight: bold;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .user { border: 2px solid #60a5fa; box-shadow: 0 0 15px #2563eb; }
+        .cache { border: 2px solid #4ade80; box-shadow: 0 0 15px #16a34a; }
+        .db { border: 2px solid #f87171; box-shadow: 0 0 15px #dc2626; }
+
+        .particle {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 5;
+            filter: blur(1px);
+        }
+
+        .hit-flash { animation: hit 0.5s ease-out; }
+        @keyframes hit {
+            0% { background: #4ade80; transform: scale(1); }
+            50% { transform: scale(1.2); box-shadow: 0 0 30px #4ade80; }
+            100% { transform: scale(1); }
+        }
+
+        .active-tab {
+            background: rgba(0, 255, 255, 0.1);
+            border-bottom: 2px solid #00ffff;
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent italic">
+            NEURAL CACHE SIMULATOR
+        </h1>
+        <p class="text-gray-500 mt-2">Visualizing High-Performance Data Architecture</p>
+    </header>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <div class="lg:col-span-1 space-y-4">
+            <div class="glow-card p-4 rounded-xl">
+                <h3 class="text-cyan-400 mb-4 font-bold flex items-center">
+                    <span class="mr-2">●</span> STRATEGY
+                </h3>
+                <div id="strategy-list" class="space-y-2">
+                    <button onclick="setStrategy('cache-aside')" id="btn-cache-aside" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition active-tab">Cache Aside</button>
+                    <button onclick="setStrategy('read-through')" id="btn-read-through" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition">Read Through</button>
+                    <button onclick="setStrategy('write-through')" id="btn-write-through" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition">Write Through</button>
+                    <button onclick="setStrategy('write-around')" id="btn-write-around" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition">Write Around</button>
+                    <button onclick="setStrategy('write-back')" id="btn-write-back" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition">Write Back</button>
+                </div>
+            </div>
+
+            <div class="glow-card p-4 rounded-xl">
+                <h3 class="text-purple-400 mb-4 font-bold">LOGS</h3>
+                <div id="logs" class="text-xs font-mono h-48 overflow-y-auto space-y-1 opacity-70">
+                    <div>System initialized...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 glow-card rounded-2xl p-8 relative min-h-[500px] flex flex-col">
+            <div class="flex justify-between items-center mb-12">
+                <div id="status-badge" class="px-4 py-1 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 text-sm">
+                    MODE: IDLE
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="triggerAction('read')" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">READ</button>
+                    <button onclick="triggerAction('write')" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-full font-bold transition">WRITE</button>
+                </div>
+            </div>
+
+            <div class="relative flex-grow flex justify-between items-center px-12" id="canvas">
+                <div id="node-user" class="node user flex-col">
+                    <span class="text-xs opacity-50">CLIENT</span>
+                    <span>USER</span>
+                </div>
+
+                <div id="node-cache" class="node cache flex-col">
+                    <span class="text-xs opacity-50">L1</span>
+                    <span>CACHE</span>
+                    <div id="cache-status" class="text-[10px] mt-1 text-gray-400">EMPTY</div>
+                </div>
+
+                <div id="node-db" class="node db flex-col">
+                    <span class="text-xs opacity-50">SATA</span>
+                    <span>DB</span>
+                </div>
+
+                <svg class="absolute inset-0 w-full h-full" style="z-index: 1;">
+                    <line id="line-user-cache" x1="160" y1="50%" x2="45%" y2="50%" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="8"/>
+                    <line id="line-cache-db" x1="55%" y1="50%" x2="85%" y2="50%" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="8"/>
+                    <path id="path-user-db" d="M 100 200 Q 400 400 800 200" fill="transparent" stroke="rgba(255,255,255,0.05)" stroke-width="2" stroke-dasharray="8" />
+                </svg>
+            </div>
+
+            <div id="explanation" class="mt-8 p-4 bg-white/5 rounded-xl border-l-4 border-cyan-500">
+                Select a strategy to begin simulation.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStrategy = 'cache-aside';
+        let isBusy = false;
+        let hasData = false;
+
+        const info = {
+            'cache-aside': "Application checks cache first. If Miss, it fetches from DB and manually updates cache. Best for general purpose.",
+            'read-through': "Application only talks to Cache. If Miss, Cache library fetches from DB automatically. Keeps code clean.",
+            'write-through': "Data is written to Cache and DB simultaneously. Ensures high consistency but higher write latency.",
+            'write-around': "Data written directly to DB, bypassing cache. Prevents cache 'pollution' with data not immediately read.",
+            'write-back': "Data written to Cache only; DB is updated later in batches. Extremely fast but risk of data loss on crash."
+        };
+
+        function setStrategy(id) {
+            currentStrategy = id;
+            document.querySelectorAll('#strategy-list button').forEach(btn => btn.classList.remove('active-tab'));
+            document.getElementById(`btn-${id}`).classList.add('active-tab');
+            document.getElementById('explanation').innerText = info[id];
+            log(`Switched to ${id.replace('-', ' ').toUpperCase()}`);
+        }
+
+        function log(msg) {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.innerHTML = `<span class="text-cyan-500">></span> ${msg}`;
+            logs.prepend(entry);
+        }
+
+        async function animateParticle(fromNode, toNode, color = '#00ffff') {
+            return new Promise(resolve => {
+                const start = document.getElementById(`node-${fromNode}`).getBoundingClientRect();
+                const end = document.getElementById(`node-${toNode}`).getBoundingClientRect();
+                const canvas = document.getElementById('canvas').getBoundingClientRect();
+
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.background = color;
+                p.style.boxShadow = `0 0 10px ${color}`;
+                
+                const startX = start.left - canvas.left + (start.width / 2);
+                const startY = start.top - canvas.top + (start.height / 2);
+                const endX = end.left - canvas.left + (end.width / 2);
+                const endY = end.top - canvas.top + (end.height / 2);
+
+                p.style.left = `${startX}px`;
+                p.style.top = `${startY}px`;
+                document.getElementById('canvas').appendChild(p);
+
+                const anim = p.animate([
+                    { left: `${startX}px`, top: `${startY}px`, opacity: 1 },
+                    { left: `${endX}px`, top: `${endY}px`, opacity: 1 }
+                ], { duration: 800, easing: 'ease-in-out' });
+
+                anim.onfinish = () => {
+                    p.remove();
+                    resolve();
+                };
+            });
+        }
+
+        async function triggerAction(type) {
+            if (isBusy) return;
+            isBusy = true;
+            const badge = document.getElementById('status-badge');
+            
+            if (type === 'read') {
+                log(`Requesting Data...`);
+                badge.innerText = "MODE: READING";
+
+                if (currentStrategy === 'cache-aside') {
+                    await animateParticle('user', 'cache', '#60a5fa');
+                    if (hasData) {
+                        log("CACHE HIT! Returning to user.");
+                        document.getElementById('node-cache').classList.add('hit-flash');
+                        setTimeout(() => document.getElementById('node-cache').classList.remove('hit-flash'), 500);
+                        await animateParticle('cache', 'user', '#4ade80');
+                    } else {
+                        log("CACHE MISS. Fetching from DB...");
+                        await animateParticle('user', 'db', '#f87171');
+                        await animateParticle('db', 'user', '#f87171');
+                        log("Populating Cache...");
+                        await animateParticle('user', 'cache', '#4ade80');
+                        updateCache(true);
+                    }
+                } 
+                else if (currentStrategy === 'read-through') {
+                    await animateParticle('user', 'cache', '#60a5fa');
+                    if (hasData) {
+                        log("CACHE HIT!");
+                        await animateParticle('cache', 'user', '#4ade80');
+                    } else {
+                        log("CACHE MISS. Cache fetching from DB...");
+                        await animateParticle('cache', 'db', '#f87171');
+                        await animateParticle('db', 'cache', '#f87171');
+                        updateCache(true);
+                        await animateParticle('cache', 'user', '#4ade80');
+                    }
+                }
+            } 
+            else { // WRITE
+                log(`Saving Data...`);
+                badge.innerText = "MODE: WRITING";
+
+                if (currentStrategy === 'write-through') {
+                    await animateParticle('user', 'cache', '#60a5fa');
+                    await animateParticle('cache', 'db', '#f87171');
+                    updateCache(true);
+                    log("Data written to both Cache and DB.");
+                }
+                else if (currentStrategy === 'write-around') {
+                    await animateParticle('user', 'db', '#f87171');
+                    log("Bypassed Cache. Data in DB only.");
+                    updateCache(false);
+                }
+                else if (currentStrategy === 'write-back') {
+                    await animateParticle('user', 'cache', '#60a5fa');
+                    updateCache(true);
+                    log("Written to Cache. DB update queued...");
+                    setTimeout(async () => {
+                        await animateParticle('cache', 'db', '#f87171');
+                        log("Async DB background update complete.");
+                    }, 2000);
+                }
+                else if (currentStrategy === 'cache-aside') {
+                    await animateParticle('user', 'db', '#f87171');
+                    updateCache(false); // invalidate
+                    log("DB updated. Cache invalidated.");
+                }
+            }
+
+            isBusy = false;
+            badge.innerText = "MODE: IDLE";
+        }
+
+        function updateCache(exists) {
+            hasData = exists;
+            const status = document.getElementById('cache-status');
+            const node = document.getElementById('node-cache');
+            if (exists) {
+                status.innerText = "DATA STORED";
+                status.classList.add('text-green-400');
+            } else {
+                status.innerText = "EMPTY";
+                status.classList.remove('text-green-400');
+            }
+        }
+    </script>
+</body>
+</html>
