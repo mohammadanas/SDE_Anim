@@ -3,6 +3,10 @@ https://github.com/codecrafters-io/build-your-own-x
 https://journal.stuffwithstuff.com/
 https://app.codecrafters.io/courses/shell/overview
 
+## AI/ML
+### Resources
+<li> Sebastian:  https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
+
 ## Resources
 <li> https://github.com/G33kzD3n
 
