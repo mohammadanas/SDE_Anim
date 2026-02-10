@@ -19,6 +19,9 @@ https://app.codecrafters.io/courses/shell/overview
 
 
 ## Databases
+### Memory Allocator
+  <li>
+    https://lwn.net/Articles/1010667
 ### Cache
   <li>
     Cached Partitioned Hash Table: https://people.csail.mit.edu/nickolai/papers/metreveli-cphash-tr.pdf
@@ -26,6 +29,7 @@ https://app.codecrafters.io/courses/shell/overview
     Cache at Webscale: https://dl.acm.org/doi/epdf/10.1145/3041021.3051098
   <li> 
     MemCache at Meta: https://research.facebook.com/file/839620310074473/scaling-memcache-at-facebook.pdf
+    https://blog.bytebytego.com/p/how-facebook-served-billions-of-requests
 
 ### Disk
 #### Basics
