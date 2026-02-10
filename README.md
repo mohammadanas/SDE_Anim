@@ -18,10 +18,14 @@ https://app.codecrafters.io/courses/shell/overview
   SWIM Membership Protocol: https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf  
 
 
-## Databases
-### Memory Allocator
+## Memory Allocation
+### Kernel
   <li>
     https://lwn.net/Articles/1010667
+  <li> 
+    https://lwn.net/Articles/229984/
+    
+## Databases 
 ### Cache
   <li>
     Cached Partitioned Hash Table: https://people.csail.mit.edu/nickolai/papers/metreveli-cphash-tr.pdf
