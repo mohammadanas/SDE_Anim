@@ -22,9 +22,10 @@ https://app.codecrafters.io/courses/shell/overview
 ### Cache
   <li>
     Cached Partitioned Hash Table: https://people.csail.mit.edu/nickolai/papers/metreveli-cphash-tr.pdf
-  </li>
   <li>
     Cache at Webscale: https://dl.acm.org/doi/epdf/10.1145/3041021.3051098
+  <li> 
+    MemCache at Meta: https://research.facebook.com/file/839620310074473/scaling-memcache-at-facebook.pdf
 
 ### Disk
 #### Basics
