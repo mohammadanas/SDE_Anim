@@ -7,6 +7,10 @@ https://app.codecrafters.io/courses/shell/overview
 ### Resources
 <li> Sebastian:  https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
 
+## Programming Language
+### Resources
+  <li> Go: https://roadmap.sh/golang
+
 ## Resources
 <li> FreeBooks: https://github.com/G33kzD3n
 
