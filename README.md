@@ -55,5 +55,51 @@ https://app.codecrafters.io/courses/shell/overview
 <li>
   Direct IO: https://www.scylladb.com/2022/04/12/direct-i-o-writes-the-path-to-storage-wealth/
 
+## Interview Resources
+
+Github Repositories inteterview preparation
+
+Coding and System Design
+
+1. Tech Interview Handbook (110k stars): https://lnkd.in/d2F5z4Af (by Yangshun Tay)
+
+2. Guide to software engineering interviews(61k stars): https://lnkd.in/dm2MbsgD (by Kevin Naughton)
+
+3. Coding Interview University(252k stars): https://lnkd.in/gydeNvaV
+
+4. What Happens when you type google.com in browser(Most Indepth Answer): https://lnkd.in/gbWkADQ6
+
+5. 30 seconds of Code (119k stars): https://lnkd.in/g2MeSvmT
+
+6. System Design Chapter Wise Explained (28k stars): https://Inkd.in/gtYDU8UD
+
+7. Devops exercises: https://lnkd.in/dPCDT55k
+
+8. Computer Science Papers for System Design by Arpit Adlakha: https://lnkd.in/gkxJ8QAM
+
+9. Top System Design Resources by Gaurav Sen(14k stars): https://lnkd.in/dbjymD_2
+
+10. All Resources for Coding, LLD and HLD interviews by Arpit Adlakha 
+:https://lnkd.in/g8W4NrP5
+
+11. Big Tech engineering tech blogs: https://lnkd.in/dJaGjeES
+
+12. System Design 101: https://lnkd.in/d5itZHgQ (by Alex Xu)
+
+13. System design primer:
+https://lnkd.in/dkPScaCW (by Donne Martin)
+
+14. Essential JS design patterns: 
+https://lnkd.in/dWmBwK-i (by Addy Osmani)
+
+15. Awesome scalability: https://lnkd.in/de4UZbiA
+
+16. Awesome System Design:
+https://lnkd.in/dU6wFXkn 
+(by Ashish Pratap Singh)
+
+17. Coding Challenges solutions:
+ https://lnkd.in/dJV_8pgH
+(by John Crickett)
 
 
