@@ -14,6 +14,10 @@ https://app.codecrafters.io/courses/shell/overview
 ## Resources
 <li> FreeBooks: https://github.com/G33kzD3n
 
+## Networking
+
+### Protocol
+  <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
 ## Distributed System
 ### Northguard
 <li>
