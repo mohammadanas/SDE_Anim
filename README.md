@@ -18,6 +18,7 @@ https://app.codecrafters.io/courses/shell/overview
 
 ### Protocol
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
+  <li> SSE: https://stackoverflow.com/questions/7636165/how-do-server-sent-events-actually-work
 
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
