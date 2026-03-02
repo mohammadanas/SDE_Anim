@@ -18,6 +18,13 @@ https://app.codecrafters.io/courses/shell/overview
 
 ### Protocol
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
+
+## Auth
+  <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
+  <li> https://www.cloudflare.com/learning/ssl/keyless-ssl/
+  <li> https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/
+  <li> https://auth0.com/intro-to-iam/what-is-oauth-2
+    
 ## Distributed System
 ### Northguard
 <li>
