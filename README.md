@@ -20,6 +20,13 @@ https://app.codecrafters.io/courses/shell/overview
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
   <li> SSE: https://stackoverflow.com/questions/7636165/how-do-server-sent-events-actually-work
 
+#### RESTFul
+  <li> https://www.infoworld.com/article/2334742/what-is-rest-the-de-facto-web-architecture-standard.html  
+  <li> https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md
+  <li> https://www.freecodecamp.org/news/rest-is-the-new-soap-97ff6c09896d/
+  <li> https://cloud.google.com/blog/products/application-development/rest-vs-rpc-what-problems-are-you-trying-to-solve-with-your-apis
+  <li> https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them
+
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
   <li> https://www.cloudflare.com/learning/ssl/keyless-ssl/
