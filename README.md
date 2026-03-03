@@ -27,6 +27,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://cloud.google.com/blog/products/application-development/rest-vs-rpc-what-problems-are-you-trying-to-solve-with-your-apis
   <li> https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them
   <li> https://www.smashingmagazine.com/2016/09/understanding-rest-and-rpc-for-http-apis
+  <li> https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
 
 #### API Versioning 
   <li> https://www.designgurus.io/answers/detail/what-are-the-best-practices-for-api-versioning-in-microservices
