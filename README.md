@@ -28,6 +28,10 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them
   <li> https://www.smashingmagazine.com/2016/09/understanding-rest-and-rpc-for-http-apis
 
+#### API Versioning 
+  <li> https://www.designgurus.io/answers/detail/what-are-the-best-practices-for-api-versioning-in-microservices
+  <li> Stipe Versioning: https://www.youtube.com/watch?v=tgDAFumt65o
+
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
   <li> https://www.cloudflare.com/learning/ssl/keyless-ssl/
