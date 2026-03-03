@@ -26,6 +26,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://www.freecodecamp.org/news/rest-is-the-new-soap-97ff6c09896d/
   <li> https://cloud.google.com/blog/products/application-development/rest-vs-rpc-what-problems-are-you-trying-to-solve-with-your-apis
   <li> https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them
+  <li> https://www.smashingmagazine.com/2016/09/understanding-rest-and-rpc-for-http-apis
 
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
