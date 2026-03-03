@@ -33,6 +33,10 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://www.designgurus.io/answers/detail/what-are-the-best-practices-for-api-versioning-in-microservices
   <li> Stipe Versioning: https://www.youtube.com/watch?v=tgDAFumt65o
   <li> https://dzone.com/articles/date-based-api-versioning-contract
+    
+#### SOLID
+  <li> https://github.com/kawser2133/SOLID-design-principles
+  <li> https://softwareengineering.stackexchange.com/questions/447532/when-to-not-use-solid-principles
 
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
