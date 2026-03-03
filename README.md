@@ -31,6 +31,7 @@ https://app.codecrafters.io/courses/shell/overview
 #### API Versioning 
   <li> https://www.designgurus.io/answers/detail/what-are-the-best-practices-for-api-versioning-in-microservices
   <li> Stipe Versioning: https://www.youtube.com/watch?v=tgDAFumt65o
+  <li> https://dzone.com/articles/date-based-api-versioning-contract
 
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
