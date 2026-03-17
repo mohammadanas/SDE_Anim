@@ -69,6 +69,13 @@ https://app.codecrafters.io/courses/shell/overview
   <li> 
     MemCache at Meta: https://research.facebook.com/file/839620310074473/scaling-memcache-at-facebook.pdf
     https://blog.bytebytego.com/p/how-facebook-served-billions-of-requests
+    
+#### Eviction Policies
+  <li> 
+    [lru-k] Eviction policy: https://medium.com/everything-databases/from-lru-to-lru-k-elevate-your-caching-game-96c292317474
+  <li>
+    [DL-ML] https://dl.acm.org/doi/full/10.1145/3723178.3723250
+  <li> [ARC] https://www.cs.cmu.edu/~natassa/courses/15-721/papers/arcfast.pdf
 
 ### Disk
 #### Basics
