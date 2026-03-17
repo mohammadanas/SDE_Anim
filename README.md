@@ -37,6 +37,7 @@ https://app.codecrafters.io/courses/shell/overview
 #### SOLID
   <li> https://github.com/kawser2133/SOLID-design-principles
   <li> https://softwareengineering.stackexchange.com/questions/447532/when-to-not-use-solid-principles
+  <li> https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/may/csharp-best-practices-dangers-of-violating-solid-principles-in-csharp
 
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
