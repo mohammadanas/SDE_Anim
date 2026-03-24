@@ -65,6 +65,10 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html
   <li> https://www.postgresql.org/docs/7.1/mvcc.html
   <li> https://www.freecodecamp.org/news/build-an-lsm-tree-storage-engine-from-scratch-handbook/
+
+### Query 
+  <li> https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
+
 ### Cache
   <li>
     Cached Partitioned Hash Table: https://people.csail.mit.edu/nickolai/papers/metreveli-cphash-tr.pdf
