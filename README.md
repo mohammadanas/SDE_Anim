@@ -71,6 +71,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> [Conn Pooling] 
     https://www.architecture-weekly.com/p/architecture-weekly-189-mastering
     https://www.cockroachlabs.com/docs/stable/connection-pooling
+  <li> [Process vs Thread] https://medium.com/@tusharmalhotra_81114/why-postgresql-chooses-processes-over-threads-and-why-it-matters-9011a98e1d84
 
 ### Cache
   <li>
