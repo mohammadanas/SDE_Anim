@@ -66,8 +66,11 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://www.postgresql.org/docs/7.1/mvcc.html
   <li> https://www.freecodecamp.org/news/build-an-lsm-tree-storage-engine-from-scratch-handbook/
 
-### Query 
-  <li> https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
+### Execution 
+  <li> [Explain] https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
+  <li> [Conn Pooling] 
+    https://www.architecture-weekly.com/p/architecture-weekly-189-mastering
+    https://www.cockroachlabs.com/docs/stable/connection-pooling
 
 ### Cache
   <li>
