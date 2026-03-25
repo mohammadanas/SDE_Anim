@@ -109,6 +109,9 @@ https://app.codecrafters.io/courses/shell/overview
 
 ## Interview Resources
 
+### System Design
+  <li> https://www.educative.io/courses/grokking-the-system-design-interview/system-design-interview-trap-why-engineers-fail-and-succeed
+
 Github Repositories inteterview preparation
 
 Coding and System Design
