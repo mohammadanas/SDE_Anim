@@ -1,11 +1,11 @@
-## Build on your Own
+f## Build on your Own
 https://github.com/codecrafters-io/build-your-own-x
 https://journal.stuffwithstuff.com/
 https://app.codecrafters.io/courses/shell/overview
 
 ## AI/ML
 ### Resources
-<li> Sebastian:  https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
+  <li> Sebastian:  https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
 
 ## Programming Language
 ### Resources
@@ -83,6 +83,8 @@ https://app.codecrafters.io/courses/shell/overview
   <li> 
     MemCache at Meta: https://research.facebook.com/file/839620310074473/scaling-memcache-at-facebook.pdf
     https://blog.bytebytego.com/p/how-facebook-served-billions-of-requests
+  <li>
+    https://docs.memcached.org/serverguide/performance/
     
 #### Eviction Policies
   <li> 
