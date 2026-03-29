@@ -74,6 +74,9 @@ https://app.codecrafters.io/courses/shell/overview
 #### B Tree
   <li> https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know
 
+#### Wired Tiger
+  <li> https://source.wiredtiger.com/2.3.1/architecture.html
+
 ### Execution 
   <li> [Explain] 
     https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
