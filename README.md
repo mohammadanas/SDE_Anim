@@ -1,4 +1,4 @@
-f## Build on your Own
+## Build on your Own
 https://github.com/codecrafters-io/build-your-own-x
 https://journal.stuffwithstuff.com/
 https://app.codecrafters.io/courses/shell/overview
