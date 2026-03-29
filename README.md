@@ -71,6 +71,9 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://docs.scylladb.com/manual/stable/architecture/compaction/compaction-strategies.html
   <li> https://fjall-rs.github.io/post/lsm-leveling/
 
+#### B Tree
+  <li> https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know
+
 ### Execution 
   <li> [Explain] 
     https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
