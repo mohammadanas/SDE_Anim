@@ -75,6 +75,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://fjall-rs.github.io/post/lsm-leveling/
   <li> Examples: https://medium.com/@sanathshetty444/understanding-tree-based-database-indexes-b-trees-b-trees-and-lsm-trees-ab887fa17690
   <li> https://medium.com/@suresh.sk1691/lsm-log-structure-merge-tree-8100488fbb5b
+  <li> https://docs.google.com/document/d/1DIrKKLCpQWOWC81Fy1YZIUVX714OSXFiPA4gKkfm6S0/edit?usp=sharing
 
 #### B Tree
   <li> https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know
