@@ -74,6 +74,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://docs.scylladb.com/manual/stable/architecture/compaction/compaction-strategies.html
   <li> https://fjall-rs.github.io/post/lsm-leveling/
   <li> Examples: https://medium.com/@sanathshetty444/understanding-tree-based-database-indexes-b-trees-b-trees-and-lsm-trees-ab887fa17690
+  <li> https://medium.com/@suresh.sk1691/lsm-log-structure-merge-tree-8100488fbb5b
 
 #### B Tree
   <li> https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know
