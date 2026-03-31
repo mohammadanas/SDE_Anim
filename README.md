@@ -61,6 +61,8 @@ https://app.codecrafters.io/courses/shell/overview
     https://lwn.net/Articles/229984/
     
 ## Databases 
+### Blogs 
+  <li> https://www.mydbops.com/blog
 ### Engine
   <li> https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html
   <li> https://www.postgresql.org/docs/7.1/mvcc.html
@@ -126,6 +128,7 @@ https://app.codecrafters.io/courses/shell/overview
 
 ## Tech Blogs
   <li> https://planetscale.com/blog/category/engineering
+    
 ## Interview Resources
 
 ### System Design
