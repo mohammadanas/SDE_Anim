@@ -123,6 +123,8 @@ https://app.codecrafters.io/courses/shell/overview
 <li> Direct IO: https://www.scylladb.com/2022/04/12/direct-i-o-writes-the-path-to-storage-wealth/
 <li> IO https://dev.to/sachin_tolay_052a7e539e57/traditional-io-vs-mmap-vs-direct-io-how-disk-access-really-works-1h4l
 
+## Tech Blogs
+  <li> https://planetscale.com/blog/category/engineering
 ## Interview Resources
 
 ### System Design
