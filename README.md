@@ -64,6 +64,7 @@ https://app.codecrafters.io/courses/shell/overview
 ### Engine
   <li> https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html
   <li> https://www.postgresql.org/docs/7.1/mvcc.html
+  <li> [B+ Tree] https://medium.com/@akashsdas_dev/b-trees-and-b-trees-682d363df1f7
     
 #### LSM Tree
   <li> https://www.freecodecamp.org/news/build-an-lsm-tree-storage-engine-from-scratch-handbook/
