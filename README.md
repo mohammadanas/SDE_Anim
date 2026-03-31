@@ -72,6 +72,7 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://www.freecodecamp.org/news/build-an-lsm-tree-storage-engine-from-scratch-handbook/
   <li> https://medium.com/@harshithgowdakt/lsm-trees-the-complete-guide-to-wal-memtables-sstables-compaction-bloom-filters-7ddde77935f4
   <li> https://docs.scylladb.com/manual/stable/architecture/compaction/compaction-strategies.html
+  <li> https://www.scylladb.com/2018/01/31/compaction-series-leveled-compaction/
   <li> https://fjall-rs.github.io/post/lsm-leveling/
   <li> Examples: https://medium.com/@sanathshetty444/understanding-tree-based-database-indexes-b-trees-b-trees-and-lsm-trees-ab887fa17690
   <li> https://medium.com/@suresh.sk1691/lsm-log-structure-merge-tree-8100488fbb5b
