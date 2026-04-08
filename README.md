@@ -16,6 +16,9 @@ https://app.codecrafters.io/courses/shell/overview
 
 ## Networking
 
+### NIC
+  <li> https://tungdam.medium.com/linux-network-ring-buffers-cea7ead0b8e8
+
 ### Protocol
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
   <li> SSE: https://stackoverflow.com/questions/7636165/how-do-server-sent-events-actually-work
