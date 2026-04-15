@@ -118,6 +118,9 @@ https://app.codecrafters.io/courses/shell/overview
     [DL-ML] https://dl.acm.org/doi/full/10.1145/3723178.3723250
   <li> [ARC] https://www.cs.cmu.edu/~natassa/courses/15-721/papers/arcfast.pdf
 
+### Time Series Dataset
+  <li> https://www.vldb.org/pvldb/vol8/p1816-teller.pdf
+
 ### Memory 
 #### Virtual Memory
   <li> https://www.youtube.com/watch?v=A9WLYbE0p-I
