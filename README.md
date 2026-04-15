@@ -120,6 +120,7 @@ https://app.codecrafters.io/courses/shell/overview
 
 ### Time Series Dataset
   <li> https://www.vldb.org/pvldb/vol8/p1816-teller.pdf
+  <li> Local Design: https://medium.com/@systemdesignpal/design-a-metrics-aggregation-system-f6d067731914
 
 ### Memory 
 #### Virtual Memory
