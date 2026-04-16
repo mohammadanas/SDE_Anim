@@ -121,6 +121,7 @@ https://app.codecrafters.io/courses/shell/overview
 ### Time Series Dataset
   <li> https://www.vldb.org/pvldb/vol8/p1816-teller.pdf
   <li> Local Design: https://medium.com/@systemdesignpal/design-a-metrics-aggregation-system-f6d067731914
+  <li> [Pintrest] https://medium.com/pinterest-engineering/improving-efficiency-of-goku-time-series-database-at-pinterest-part-1-7659b94796f4
 
 ### Memory 
 #### Virtual Memory
