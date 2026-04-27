@@ -92,6 +92,9 @@ https://app.codecrafters.io/courses/shell/overview
 #### Wired Tiger
   <li> https://source.wiredtiger.com/2.3.1/architecture.html
 
+### Disk Layout
+  <li> https://cs186berkeley.net/fa20/resources/static/notes/n02-DisksFiles.pdf
+
 ### Execution 
   <li> [Explain] 
     https://dev.mysql.com/doc/refman/8.4/en/explain-output.html
