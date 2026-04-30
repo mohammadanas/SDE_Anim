@@ -70,6 +70,10 @@ https://app.codecrafters.io/courses/shell/overview
 ## Databases 
 ### Blogs 
   <li> https://www.mydbops.com/blog
+
+### WAL
+  <li> https://arxiv.org/pdf/2507.13062
+
 ### Engine
   <li> https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html
   <li> https://www.postgresql.org/docs/7.1/mvcc.html
