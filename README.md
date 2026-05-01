@@ -16,6 +16,9 @@ https://app.codecrafters.io/courses/shell/overview
 
 ## Networking
 
+### L4 Load Balancing
+  <li> https://alibaba-cloud.medium.com/high-performance-dpdk-based-server-load-balancing-for-alibaba-singles-day-shopping-festival-c126ba38e98d
+
 ### NIC
   <li> https://tungdam.medium.com/linux-network-ring-buffers-cea7ead0b8e8
   <li> https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-receiving-data/
