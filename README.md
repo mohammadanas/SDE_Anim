@@ -46,6 +46,9 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://softwareengineering.stackexchange.com/questions/447532/when-to-not-use-solid-principles
   <li> https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/may/csharp-best-practices-dangers-of-violating-solid-principles-in-csharp
 
+### Load balancing
+  <li> https://medium.com/@pawanchoudhary276437/layer-4-load-balancers-a-complete-deep-dive-guide-03fa1053f4c9
+
 ## Auth
   <li> https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
   <li> https://www.cloudflare.com/learning/ssl/keyless-ssl/
