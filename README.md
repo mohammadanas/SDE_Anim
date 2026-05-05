@@ -27,6 +27,10 @@ https://app.codecrafters.io/courses/shell/overview
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
   <li> SSE: https://stackoverflow.com/questions/7636165/how-do-server-sent-events-actually-work
 
+#### WebRTC
+  <li> https://medium.com/@fengliu_367/getting-started-with-webrtc-a-practical-guide-with-example-code-b0f60efdd0a7
+  <li> https://navanathjadhav.medium.com/i-built-a-real-time-chat-app-with-webrtc-no-server-required-0d4628b5e674
+
 #### RESTFul
   <li> https://www.infoworld.com/article/2334742/what-is-rest-the-de-facto-web-architecture-standard.html  
   <li> https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md
@@ -140,6 +144,7 @@ https://app.codecrafters.io/courses/shell/overview
 ### Memory 
 #### Virtual Memory
   <li> https://www.youtube.com/watch?v=A9WLYbE0p-I
+    
 ### Disk
 #### Basics
 <li>
