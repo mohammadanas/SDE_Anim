@@ -81,6 +81,9 @@ https://app.codecrafters.io/courses/shell/overview
 ### Blogs 
   <li> https://www.mydbops.com/blog
 
+### Distributed Lock
+  <li> https://asrathore08.medium.com/system-design-distributed-lock-821da42054db
+
 ### WAL
   <li> https://arxiv.org/pdf/2507.13062
 
