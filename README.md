@@ -132,7 +132,9 @@ https://app.codecrafters.io/courses/shell/overview
     https://blog.bytebytego.com/p/how-facebook-served-billions-of-requests
   <li>
     https://docs.memcached.org/serverguide/performance/
-  <li> [REDIS] https://medium.com/better-programming/internals-workings-of-redis-718f5871be84
+  <li> [REDIS] 
+    https://medium.com/better-programming/internals-workings-of-redis-718f5871be84
+    https://medium.com/@wrong.about/redis-internals-series-7fff917b6a60
     
 #### Eviction Policies
   <li> 
