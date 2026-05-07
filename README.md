@@ -22,6 +22,7 @@ https://app.codecrafters.io/courses/shell/overview
 ### NIC
   <li> https://tungdam.medium.com/linux-network-ring-buffers-cea7ead0b8e8
   <li> https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-receiving-data/
+  <li> [EPOLL]: https://copyconstruct.medium.com/the-method-to-epolls-madness-d9d2d6378642
 
 ### Protocol
   <li> gRPC: https://ssudan16.medium.com/internals-of-grpc-architecture-afae7450ff5b
