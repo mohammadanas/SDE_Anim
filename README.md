@@ -135,6 +135,8 @@ https://app.codecrafters.io/courses/shell/overview
   <li> [REDIS] 
     https://medium.com/better-programming/internals-workings-of-redis-718f5871be84
     https://medium.com/@wrong.about/redis-internals-series-7fff917b6a60
+  <li>
+    [CPU Cache Coherence] https://medium.com/codetodeploy/cache-coherence-how-the-mesi-protocol-keeps-multi-core-cpus-consistent-a572fbdff5d2
     
 #### Eviction Policies
   <li> 
