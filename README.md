@@ -69,6 +69,8 @@ https://app.codecrafters.io/courses/shell/overview
   NorthGuard Repalcement of Kafka: https://www.linkedin.com/blog/engineering/infrastructure/introducing-northguard-and-xinfra
 <li>
   SWIM Membership Protocol: https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf  
+<li>
+  [S3 Consistency] https://www.allthingsdistributed.com/2021/04/s3-strong-consistency.html 
 
 
 ## Memory Allocation
