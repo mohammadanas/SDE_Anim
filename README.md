@@ -84,6 +84,7 @@ https://app.codecrafters.io/courses/shell/overview
 ## Databases 
 ### Blogs 
   <li> https://www.mydbops.com/blog
+  <li> Cluster: https://github.com/vitessio/vitess
 
 ### Distributed Lock
   <li> https://asrathore08.medium.com/system-design-distributed-lock-821da42054db
