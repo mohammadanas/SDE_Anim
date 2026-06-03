@@ -85,6 +85,7 @@ https://app.codecrafters.io/courses/shell/overview
 ### Blogs 
   <li> https://www.mydbops.com/blog
   <li> Cluster: https://github.com/vitessio/vitess
+  <li> Isolation Level: https://ssudan16.medium.com/database-isolation-levels-explained-61429c4b1e31
 
 ### Distributed Lock
   <li> https://asrathore08.medium.com/system-design-distributed-lock-821da42054db
