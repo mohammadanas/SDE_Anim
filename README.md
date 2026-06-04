@@ -64,6 +64,14 @@ https://app.codecrafters.io/courses/shell/overview
   <li> Container: https://medium.com/@dmosyan/understanding-7-concepts-of-containers-6925365abee4 
     
 ## Distributed System
+
+### Blogs
+  <li> https://distributed-computing-musings.com/
+  <li> https://martinfowler.com/
+  <li> https://microservices.io/
+  <li> https://www.allthingsdistributed.com/
+  <li> https://blog.acolyer.org/
+    
 ### Northguard
 <li>
   NorthGuard Repalcement of Kafka: https://www.linkedin.com/blog/engineering/infrastructure/introducing-northguard-and-xinfra
