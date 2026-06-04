@@ -97,6 +97,7 @@ https://app.codecrafters.io/courses/shell/overview
 
 ### Distributed Lock
   <li> https://asrathore08.medium.com/system-design-distributed-lock-821da42054db
+  <li> https://towardsdev.com/implementing-distributed-locks-correctly-5a35179422a6
 
 ### WAL
   <li> https://arxiv.org/pdf/2507.13062
