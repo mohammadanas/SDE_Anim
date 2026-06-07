@@ -79,6 +79,8 @@ https://app.codecrafters.io/courses/shell/overview
   SWIM Membership Protocol: https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf  
 <li>
   [S3 Consistency] https://www.allthingsdistributed.com/2021/04/s3-strong-consistency.html 
+<li>
+  [File Chunking] https://joshleeb.com/posts/chunking.html
 <li> 
   [Consistent Crash Recovery] https://research.cs.wisc.edu/adsl/Publications/optfs-sosp13.pdf
 
