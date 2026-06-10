@@ -197,6 +197,9 @@ https://app.codecrafters.io/courses/shell/overview
 #### Rate Limiter
   <li> https://bytebytego.com/courses/system-design-interview/design-a-rate-limiter
   <li> https://blog.cloudflare.com/counting-things-a-lot-of-different-things/
+
+#### Zoom Calls
+  <li> https://medium.com/@lazygeek78/system-design-of-zoom-9f0b945a5636
   
 Github Repositories inteterview preparation
 
