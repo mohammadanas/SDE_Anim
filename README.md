@@ -71,6 +71,10 @@ https://app.codecrafters.io/courses/shell/overview
   <li> https://microservices.io/
   <li> https://www.allthingsdistributed.com/
   <li> https://blog.acolyer.org/
+
+### Uber Proximity Search
+<li>
+  https://newsletter.systemdesign.one/p/how-does-uber-find-nearby-drivers
     
 ### Northguard
 <li>
