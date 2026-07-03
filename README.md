@@ -204,6 +204,10 @@ https://app.codecrafters.io/courses/shell/overview
 
 #### Zoom Calls
   <li> https://medium.com/@lazygeek78/system-design-of-zoom-9f0b945a5636
+
+#### Google Map
+  <li> https://medium.com/@jyoti1308/designing-google-maps-d9865c3506ba
+  <li> https://www.youtube.com/watch?v=jk3yvVfNvds
   
 Github Repositories inteterview preparation
 
